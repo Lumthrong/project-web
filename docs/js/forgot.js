@@ -10,7 +10,7 @@ document.getElementById("resetForm")?.addEventListener("submit", async function 
   const newPassword = document.getElementById("newPassword").value.trim();
 
   try {
-    const response = await fetch("/reset-password", {
+    const response = await fetch("https://project-web-toio.onrender.com/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, currentPassword, newPassword })
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newPassword = document.getElementById('newPassword').value.trim();
 
     try {
-      const res = await fetch('/verify-otp', {
+      const res = await fetch('https://project-web-toio.onrender.com/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, newPassword })
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle resend OTP
   resendBtn.addEventListener('click', async () => {
     try {
-      const res = await fetch('/send-otp', {
+      const res = await fetch('https://project-web-toio.onrender.com/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -137,7 +137,7 @@ document.getElementById('recoverForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
   try {
-    const res = await fetch('/send-otp', {
+    const res = await fetch('https://project-web-toio.onrender.com/send-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
