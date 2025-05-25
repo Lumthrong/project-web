@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Protect links that require login
 document.addEventListener('DOMContentLoaded', () => {
-  fetch('/check-auth')
+  fetch('https://project-web-toio.onrender.com/check-auth')
     .then(res => res.json())
     .then(data => {
       if (data.loggedIn) {
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Auth check failed:', err);
     });
 });
-fetch('/check-auth')
+fetch('https://project-web-toio.onrender.com/check-auth')
   .then(res => res.json())
   .then(data => {
     if (data.loggedIn) {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let searchData = [];
 
   // Fetch the search index JSON and build Lunr index
-  fetch('/search-index.json')
+  fetch('https://project-web-toio.onrender.com/search-index.json')
     .then(res => {
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       return res.json();
