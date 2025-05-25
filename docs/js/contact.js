@@ -28,7 +28,7 @@ document.getElementById('contactForm').addEventListener('submit', async function
     return;
   }
 
-  const res = await fetch('/contact', {
+  const res = await fetch('https://project-web-toio.onrender.com/contact', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, phone, subject, message })
