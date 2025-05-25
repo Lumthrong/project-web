@@ -1,1 +1,175 @@
-_
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Little Flower Higher Secondary School</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/chatbot.css" />
+  <link rel="stylesheet" href="css/mediaquery.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <script src="https://unpkg.com/lunr/lunr.js" defer></script>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <h1 class="logo"><a href="index.html">Little Flower Higher Secondary School</a></h1>
+    <div class="nav">
+      <button id="menuToggle" class="menu-toggle"><i class="fa fa-bars"></i></button>
+      <nav class="navbar">
+        <ul class="menu">
+          <li><a href="index.html" class="active">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="facilities.html">Facilities</a></li>
+          <li><a href="notification.html">Notification</a></li>
+          <li id="authItem"><a href="login.html" id="authLink"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+          <li id="logoutItem" style="display: none;">
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <div id="usernameDisplay"></div>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Search Bar -->
+    <section class="search-bar animate-on-scroll">
+      <div class="find">
+        <input type="text" id="searchBox" placeholder="Search..." required />
+        <ul id="results"></ul>
+      </div>
+    </section>
+
+    <!-- Hero Section -->
+    <section class="hero animate-on-scroll">
+      <div class="hero-bg current"></div>
+      <div class="hero-bg next"></div>
+      <div class="container">
+        <h1 class="fonts">ONWARD, FORWARD TO NEW HEIGHTS</h1>
+        <p>Discover the world of learning at Little Flower Higher Secondary School</p>
+        <a href="#" class="btn-click">Explore Our Programs</a>
+        <div class="hero-indicators">
+          <span class="indicator active"></span>
+          <span class="indicator"></span>
+          <span class="indicator"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- News and Updates -->
+    <section class="notification-section animate-on-scroll">
+      <div class="news">NEWS & UPDATES</div>
+      <div class="notification-wrapper">
+        <div class="notification-track" id="notificationTrack"></div>
+      </div>
+    </section>
+
+    <!-- Vision Section -->
+    <section class="program animate-on-scroll">
+      <div class="card">
+        <div class="card-detail">
+          <h1 class="title">Our Vision</h1>
+          <p class="description">To empower every student to achieve their fullest potential, fostering a love for
+            learning, and cultivating values of integrity, compassion, and responsibility. We aim to create a
+            nurturing environment where academic excellence and personal growth go hand in hand.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Courses Offered -->
+    <section class="program animate-on-scroll">
+      <div class="card">
+        <div class="card-detail">
+          <h1 class="title">Courses Offered</h1>
+          <p class="description">Aligned with higher secondary standards, our curriculum balances academic knowledge
+            with real-world skills.</p>
+          <a href="docs/Lumthrong.pdf" class="btn-click">Prospectus <i class="fa fa-download"></i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="features animate-on-scroll">
+      <h2>Why Choose Us?</h2>
+      <div class="feature-cards">
+        <div class="feature-card">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <h3>Experienced Faculty</h3>
+          <p>Our teachers are passionate, qualified, and dedicated to student growth.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-book-open"></i>
+          <h3>Modern Curriculum</h3>
+          <p>We combine traditional values with modern educational strategies.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-globe-asia"></i>
+          <h3>Holistic Development</h3>
+          <p>Focus on academics, sports, culture, and values for all-round growth.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials animate-on-scroll">
+      <h2>What Our Alumni Say</h2>
+      <div class="testimonial-container">
+        <div class="testimonial-track" id="testimonialTrack">
+          <!-- JS will inject testimonial cards here -->
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- Floating Chatbot -->
+    <div id="chat-icon" onclick="toggleChat()">
+      <img src="icons/Bot-icon.png" alt="Chatbot" />
+    </div>
+    <div id="chat-container" onclick="event.stopPropagation()">
+      <div id="chat-header"><span>Ask Martin</span></div>
+      <div id="chat-box">
+        <div id="typing-indicator" style="display: none;">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div id="chat-input">
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button onclick="sendMessage()"><img src="icons/send-btn.png" alt="Send" /></button>
+      </div>
+    </div>
+  </main>
+
+ <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+      <h1>Quick Links</h1>
+      <ul>
+        <li><a href="student.html">Student</a></li>
+        <li><a href="faculty.html">Faculty</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="footer-end">
+      <div class="footer-info"></div>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+      </div>
+    </div>
+    <p>2025 Little Flower Higher Secondary School. All rights reserved.</p>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script src="js/loginsignup.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+
+</html>
