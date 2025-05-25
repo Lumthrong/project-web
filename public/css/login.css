@@ -1,0 +1,143 @@
+.auth-container {
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  justify-content: center;
+  animation: fadeIn 0.6s ease-in;
+}
+
+.auth-container h2 {
+  color: #9A2A2A;
+  margin-bottom: 20px;
+  font-weight: 600;
+  animation: slideDown 0.6s ease-in-out;
+}
+
+.auth-container form {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  background: #fafafa;
+  animation: floatIn 0.6s ease;
+}
+
+.auth-container form input {
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.auth-container form input:focus {
+  outline: none;
+  border: 1px solid #9A2A2A;
+  box-shadow: 0 0 6px rgba(154, 42, 42, 0.4);
+}
+
+.auth-container form input.active {
+  border-color: #7B1818;
+}
+
+.auth-container form button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  background: #7B1818;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.auth-container form button:hover {
+  background: #9A2A2A;
+  transform: translateY(-1px);
+}
+
+.auth-container a {
+  color: #9A2A2A;
+  font-size: 14px;
+  transition: color 0.3s ease;
+  text-decoration: none;
+}
+
+.auth-container a:hover {
+  color: #dc3545;
+}
+
+.form-error {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.input-error {
+  border: 1px solid #dc3545 !important;
+  box-shadow: 0 0 4px rgba(255, 53, 69, 0.4);
+  animation: shake 0.3s ease;
+}
+
+#resendOtp {
+  background: #7B1818;
+  color: white;
+  padding: 6px 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#resendOtp:hover {
+  background: #9A2A2A;
+}
+
+#maskedEmail {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+/* Reusable form wrapper styles */
+#loginForm,
+#signupForm,
+#resetForm {
+  width: 100%;
+}
+
+/* Animations */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  0% { transform: translateY(-20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes floatIn {
+  0% { opacity: 0; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
