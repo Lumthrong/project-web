@@ -1,0 +1,141 @@
+/* === Container and Section === */
+.Notice {
+    padding: 40px;
+    font-size: 16px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.6s ease;
+    max-width: 900px;
+    margin: 60px auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* === Section1 Styling === */
+
+.section1 h1 {
+    color: #9A2A2A;
+    margin-bottom: 25px;
+    font-size: 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.section1 h1::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #9A2A2A;
+    margin: 10px auto 0;
+    border-radius: 3px;
+}
+
+/* === Title Section === */
+.title {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.title p {
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 0;
+    background: #fdf1f1;
+    color: #555;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(154, 42, 42, 0.05);
+    animation: slideUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+.title p:hover {
+    background: #f9dede;
+    transform: translateX(5px);
+}
+
+.title a {
+    text-decoration: none;
+    color: #9A2A2A;
+    font-weight: 600;
+}
+
+.title a:hover {
+    color: #f39c12;
+}
+
+/* === Protected Section === */
+.protected-section {
+    border-radius: 8px;
+    padding: 20px;
+    background: #fefefe;
+    border: 1px solid #eee;
+    margin-top: 30px;
+}
+
+.protected-section p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #ccc;
+    padding: 10px;
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.locked-content {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.locked-content a {
+    color: #9A2A2A;
+    text-decoration: underline;
+}
+
+.locked {
+    color: #bbb;
+    pointer-events: none;
+    text-decoration: line-through;
+}
+
+.protected-content a {
+    color: #9A2A2A;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+.protected-content p{
+    margin-bottom: 20px;
+}
+
+/* === Animation === */
+@keyframes slideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* === Utility === */
+.hidden {
+    display: none !important;
+}
