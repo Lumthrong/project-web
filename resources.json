@@ -1,0 +1,22 @@
+[
+  {
+    "url": "http://localhost:3000/about.html",
+    "displayName": "About",
+    "importance": 5
+  },
+  {
+    "url": "http://localhost:3000/faculty.html",
+    "displayName": "Faculty",
+    "importance": 4
+  },
+  {
+    "url": "http://localhost:3000/notification.html",
+    "displayName": "Admissions",
+    "importance": 3
+  },
+  {
+    "url": "http://localhost:3000/student.html",
+    "displayName": "Students",
+    "importance": 3
+  }
+]
