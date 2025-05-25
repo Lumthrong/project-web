@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check login status and update UI accordingly
   async function checkLoginStatus() {
     try {
-      const res = await fetch('/check-auth', { method: 'GET', credentials: 'include' });
+      const res = await fetch('https://project-web-toio.onrender.com/check-auth', { method: 'GET', credentials: 'include' });
       const data = await res.json();
 
       if (data.loggedIn) {
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setFormDisabled(loginForm, true);
 
       try {
-        const res = await fetch('/login', {
+        const res = await fetch('https://project-web-toio.onrender.com/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Request OTP for signup
-      const res = await fetch('/request-signup-otp', {
+      const res = await fetch('https://project-web-toio.onrender.com/request-signup-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }),
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const res = await fetch('/verify-signup-otp', {
+        const res = await fetch('https://project-web-toio.onrender.com/verify-signup-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password, otp }),
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       try {
-        const res = await fetch('/logout', { method: 'POST', credentials: 'include' });
+        const res = await fetch('https://project-web-toio.onrender.com/logout', { method: 'POST', credentials: 'include' });
         if (res.ok) window.location.href = 'index.html';
       } catch (err) {
         console.error('Logout failed:', err);
