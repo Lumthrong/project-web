@@ -23,8 +23,7 @@ const app = express();
 
 const signupOtpStore = new Map(); // OTP store for signup verification
 const otpStore = new Map();
-const PORT = 3000;
-
+const PORT = process.env.PORT || 3000; // Use the port provided by Render
 
 app.use(cors());
 app.use(express.json());
@@ -497,5 +496,5 @@ protectedPages.forEach(page => {
 // ========== START SERVER ==========
 refreshCache();
 app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
