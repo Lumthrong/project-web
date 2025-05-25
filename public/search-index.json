@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "title": "About",
+    "content": "Little Flower Higher Secondary School is known for academic excellence and student development.",
+    "url": "About.html"
+  },
+  {
+    "id": "2",
+    "title": "Facilities",
+    "content": "Our facilities include a library, sports complex, hostel, and cafeteria.",
+    "url": "facilities.html"
+  },
+  {
+    "id": "3",
+    "title": "Academic Calender",
+    "content": "The Academic Calendar for the upcoming academic year is now available! Please review the calendar for important dates including the start of the semester, exam periods, holidays, and more.",
+    "url": "Notification.html"
+  },
+  {
+    "id": "4",
+    "title": "Application",
+    "content": "The deadline for submitting applications for Specify Program/Scholarships/Internships is fast approaching! Make sure to complete your application before the cutoff.",
+    "url": "Notification.html"
+  },
+  {
+    "id": "5",
+    "title": "Prospectus",
+    "content": "Prospectus is now available for students who wishes to pursue studies at Little Flower school.",
+    "url": "index.html"
+  },
+  {
+    "id": "6",
+    "title": "Exam Routine",
+    "content": "The Exam Routine for the upcoming exams has been released! Please make sure to check the official schedule for your exam time and dates.",
+    "url": "Notification.html"
+  },
+  {
+    "id": "7",
+    "title": "Admission",
+    "content": "Admissions for 2025 are now open!.",
+    "url": "Notification.html"
+  }
+]
