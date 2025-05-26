@@ -29,9 +29,10 @@ main {
 
 .header {
   background: #7B1818;
-  color: #fff;
   padding: 20px;
-  align-items: center;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
@@ -112,7 +113,9 @@ main {
   bottom: 200px;
   font-size: 18px;
 }
-
+.menu li a.active{
+  background: #b13b3b;
+}
 .menu li a:hover {
   background: #9A2A2A;
   width: 100%;

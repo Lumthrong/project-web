@@ -20,7 +20,6 @@
     padding: 10px;
     display: flex;
     text-align: center;
-    align-items: center;
   }
 
   .logo a{
@@ -29,6 +28,8 @@
 
   .menu-toggle {
     font-size: 26px;
+    margin-right: auto;
+    order: -1;
   }
 
   .nav {
@@ -90,25 +91,21 @@
 
   .header {
     padding: 20px 30px;
-    display: flex;
-    flex-direction: column;
   }
 
   .logo a{
-    font-size: 18px;
+    font-size: 28px;
   }
   .nav{
     display: flex;
     justify-content: left;
   }
-
   .menu-toggle {
-    font-size: 28px;
+    font-size: 38px;
   }
-
   .navbar {
     width: 250px;
-    top: 70px;
+    top: 75px;
     max-height: 0;
     overflow: hidden;
   }
@@ -152,10 +149,6 @@
 @media (min-width: 769px) and (max-width: 1024px) {
   body {
     font-size: 19px;
-  }
-
-  .header {
-    padding: 20px;
   }
 
   .logo a{
@@ -226,10 +219,6 @@
 @media (min-width: 1025px) {
   body {
     font-size: 20px;
-  }
-
-  .header {
-    padding: 10px;
   }
 
   .logo a{
@@ -726,10 +715,9 @@
 }
 
 /*Facilities.css*/
-
 /* Medium Devices (Tablets) */
 @media (max-width: 991px) {
-  main {
+  main{
     flex-direction: column;
     gap: 30px;
   }
