@@ -40,7 +40,7 @@ const pool = mysql.createPool({
   host: 'mysql25-iamrein22-b134.l.aivencloud.com',
   user: 'avnadmin',
   password: 'AVNS_9fI-t0cKjZwHMs8wk-f',
-  database: 'school',
+  database: 'defaultdb',
   port: 24234,
   waitForConnections: true,
   connectionLimit: 10,
