@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -425,7 +424,6 @@ protectedPages.forEach(page => {
 });
 
 // ========== START SERVER ==========
-refreshCache();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
