@@ -388,7 +388,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login.html' }),
   (req, res) => {
     req.session.user = { username: req.user.username };
-    res.redirect('/index.html');
+    res.redirect('https://lumthrong.github.io/project-web/index.html');
   });
 
 // ========== CHECK AUTH STATUS ==========
