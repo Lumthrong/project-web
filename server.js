@@ -36,17 +36,17 @@ app.use(express.static(path.join(__dirname, 'docs')));
 
 // MySQL connection pool
 // Adjust paths to your Aiven SSL certs or use environment variables
-async function startServer(){
-try{
-  const connection = mysql.createConnection({
+const pool = mysql.createPool({
   host: 'mysql25-iamrein22-b134.l.aivencloud.com',
   user: 'avnadmin',
   password: 'AVNS_9fI-t0cKjZwHMs8wk-f',
   database: 'school',
   port: 24234,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
   ssl: {
-    // If Aiven provides CA cert as a file, load it:
-    ca: fs.readFileSync(path.join(__dirname, 'certs','ca.pem'))
+    ca: fs.readFileSync(path.join(__dirname, 'certs', 'ca.pem'))
   }
 });
 
