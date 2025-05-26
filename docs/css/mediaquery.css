@@ -86,7 +86,7 @@
 /* Small tablets and larger phones: 481px to 768px */
 @media (min-width: 481px) and (max-width: 768px) {
   body {
-    font-size: 12px;
+    font-size: 18px;
   }
 
   .header {
@@ -94,7 +94,7 @@
   }
 
   .logo a{
-    font-size: 20px;
+    font-size: 22px;
   }
   .nav{
     display: flex;
