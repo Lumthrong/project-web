@@ -29,7 +29,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'docs','ca.pem')));
+app.use(express.static(path.join(__dirname, 'docs')));
 
 // MySQL connection pool
 // Adjust paths to your Aiven SSL certs or use environment variables
@@ -41,7 +41,7 @@ const connection = mysql.createConnection({
   port: 24234,
   ssl: {
     // If Aiven provides CA cert as a file, load it:
-    ca: fs.readFileSync(path.join(__dirname, 'certs'))
+    ca: fs.readFileSync(path.join(__dirname, 'certs','ca.pem'))
   }
 });
 
