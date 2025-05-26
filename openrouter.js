@@ -29,7 +29,7 @@ class ChatAgent {
         { 
           headers: { 
             Authorization: `Bearer ${this.apiKey}`,
-            'HTTP-Referer': process.env.SITE_URL || 'http://localhost:3000'
+            'HTTP-Referer': process.env.SITE_URL || 'https://lumthrong.github.io/'
           },
           timeout: 100000 // 10 seconds
         }
