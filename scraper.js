@@ -6,7 +6,7 @@ const extractContent = async (url) => {
     const response = await axios.get(url, {
       timeout: 10000,
       headers: { 
-        'User-Agent': 'InstitutionalBot/1.0 (+http://localhost:3000/)',
+        'User-Agent': 'InstitutionalBot/1.0 (+https://lumthrong.github.io/)',
         'Accept-Language': 'en-US,en;q=0.9'
       }
     });
