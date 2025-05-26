@@ -8,7 +8,7 @@ const extractContent = async (url) => {
     const response = await axios.get(url, {
       timeout: 15000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; InstitutionalBot/1.0; +http://localhost:3000)',
+        'User-Agent': 'Mozilla/5.0 (compatible; InstitutionalBot/1.0; +https://lumthrong.github.io)',
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept': 'text/html,application/xhtml+xml;q=0.9,image/webp,*/*;q=0.8'
       }
