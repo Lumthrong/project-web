@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { extractContent, extractKeywords } = require('./scraper');
-const ChatAgent = require('./openrouter');
+const ChatAgent = require('./groq');
 const resources = require('./resources.json');
 const path = require('path');
 const session = require('express-session');
@@ -96,93 +96,103 @@ passport.use(new GoogleStrategy({
 
 // ======== CHATBOT ROUTE ========
 // Configuration
+const validURLs = resources.map(r => r.url.trim());
 let contentCache = new Map();
 const CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
 
-// Initialize Content Cache
+// Refresh cache from real pages
 async function refreshCache() {
   try {
     await Promise.all(resources.map(async (resource) => {
       const data = await extractContent(resource.url);
-      if (data) contentCache.set(resource.url, {
-        ...data,
-        displayName: resource.displayName,
-        importance: resource.importance || 1
-      });
+      if (data) {
+        contentCache.set(resource.url, {
+          ...data,
+          url: resource.url.trim(),
+          displayName: resource.displayName,
+          importance: resource.importance || 1
+        });
+      }
     }));
   } catch (error) {
     console.error('Cache refresh failed:', error);
   }
   setTimeout(refreshCache, CACHE_TTL);
 }
-refreshCache(); // Start cache on server start
 
-// Enhanced Response Endpoint
 app.post('/get_response', async (req, res) => {
   const { message, history } = req.body;
-  const query = message.trim().toLowerCase();
-  const queryKeywords = extractKeywords(query);
+  const cleanMessage = message.toLowerCase().trim();
+  const isCasual = ['hi', 'hello', 'hey', 'how are you', 'who are you', 'thanks', 'thank you']
+    .includes(cleanMessage);
 
   try {
-    let bestMatch = null;
-    let maxScore = 0;
-
-    // 1. Search contentCache for best match
-    contentCache.forEach((page) => {
-      const score = page.content.reduce((total, section) => {
-        const headerMatches = queryKeywords.filter(kw =>
-          section.header.toLowerCase().includes(kw)
-        ).length;
-        const contentMatches = queryKeywords.filter(kw =>
-          section.content.toLowerCase().includes(kw)
-        ).length;
-        return total + (headerMatches * 2) + contentMatches;
-      }, 0) * page.importance;
-
-      if (score > maxScore) {
-        maxScore = score;
-        bestMatch = page;
-      }
-    });
-
     const agent = new ChatAgent();
     let response;
 
-    // 2. Define casual fallback triggers
-    const casualIntents = ['hi', 'hello', 'hey', 'good morning', 'good evening'];
+    if (isCasual) {
+      // Casual conversation: no content scan or links
+      response = await agent.generateResponse(cleanMessage, history) || 
+                 "Hello! How can I assist you today?";
+      // Remove any hallucinated links
+      response = response.replace(/<a\s[^>]*href="[^"]*"[^>]*>.*?<\/a>/gi, '');
+      return res.json({ response });
+    }
 
-    // 3. Evaluate fallback conditions
-    const matchedSections = bestMatch?.content.filter(section =>
-      queryKeywords.some(kw =>
-        section.header.toLowerCase().includes(kw) ||
-        section.content.toLowerCase().includes(kw)
-      )
-    ) || [];
+    // Informational query: proceed with content matching
+    const queryKeywords = extractKeywords(cleanMessage);
+    let bestMatch = null;
+    let maxScore = 0;
 
-    const shouldUseContext =
-      bestMatch &&
-      maxScore > 3 &&
-      queryKeywords.length > 2 &&
-      matchedSections.length > 0 &&
-      !casualIntents.includes(query);
+    contentCache.forEach((page) => {
+      let matchedSections = [];
+      let score = 0;
 
-    if (shouldUseContext) {
+      page.content.forEach(section => {
+        const headerMatches = queryKeywords.filter(kw =>
+          section.header.toLowerCase().includes(kw)
+        ).length;
+
+        const contentMatches = queryKeywords.filter(kw =>
+          section.content.toLowerCase().includes(kw)
+        ).length;
+
+        const sectionScore = (headerMatches * 2) + contentMatches;
+        if (sectionScore > 0) {
+          matchedSections.push(section);
+          score += sectionScore;
+        }
+      });
+
+      score *= page.importance;
+
+      if (score > maxScore && matchedSections.length > 0) {
+        maxScore = score;
+        bestMatch = {
+          ...page,
+          matchedSections
+        };
+      }
+    });
+
+    if (bestMatch && maxScore > 3) {
       const context = `Relevant content from ${bestMatch.displayName}:\n${
-        matchedSections.slice(0, 5).map(s =>
-          `• ${s.header}: ${s.content.substring(0, 150)}...`
-        ).join('\n')
+        bestMatch.matchedSections.map(s => `• ${s.header}: ${s.content.substring(0, 150)}...`).join('\n')
       }`;
 
-      response = await agent.generateResponse(
-        `Question: ${message}\n${context}`,
-        history
-      );
+      response = await agent.generateResponse(`Question: ${message}\n${context}`, history);
+      // Remove any hallucinated links
+      response = response.replace(/<a\s[^>]*href="[^"]*"[^>]*>.*?<\/a>/gi, '');
 
-      response += `\n\n<a href="${bestMatch.url}" class="page-link">${bestMatch.displayName}</a>`;
+      if (validURLs.includes(bestMatch.url)) {
+        response += `\n\n<a href="${bestMatch.url}" class="page-link">${bestMatch.displayName}</a>`;
+      }
     } else {
-      // Default LLM fallback
-      response = await agent.generateResponse(message, history) ||
-        "I'm still learning about our institution. Please visit our website for more information.";
+      // No good match found
+      response = await agent.generateResponse(cleanMessage, history) ||
+                 "I'm still learning. You can explore the website for more information.";
+      // Remove any hallucinated links
+      response = response.replace(/<a\s[^>]*href="[^"]*"[^>]*>.*?<\/a>/gi, '');
     }
 
     res.json({ response });
