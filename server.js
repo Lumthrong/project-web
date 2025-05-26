@@ -25,7 +25,10 @@ const signupOtpStore = new Map(); // OTP store for signup verification
 const otpStore = new Map();
 const PORT = process.env.PORT || 3000; // Use the port provided by Render
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://lumthrong.github.io',
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
