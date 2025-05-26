@@ -7,6 +7,7 @@
   <title>Little Flower Higher Secondary School</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/chatbot.css" />
   <link rel="stylesheet" href="css/mediaquery.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <script src="https://unpkg.com/lunr/lunr.js" defer></script>
@@ -123,7 +124,27 @@
         </div>
       </div>
     </section>
+
+
+
+    <!-- Floating Chatbot -->
+    <div id="chat-icon" onclick="toggleChat()">
+      <img src="icons/Bot-icon.png" alt="Chatbot" />
+    </div>
+    <div id="chat-container" onclick="event.stopPropagation()">
+      <div id="chat-header"><span>Ask Martin</span></div>
+      <div id="chat-box">
+        <div id="typing-indicator" style="display: none;">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div id="chat-input">
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button onclick="sendMessage()"><img src="icons/send-btn.png" alt="Send" /></button>
+      </div>
+    </div>
   </main>
+
  <!-- Footer -->
   <footer>
     <div class="footer-links">
@@ -148,6 +169,7 @@
   <script src="js/script.js"></script>
   <script src="js/loginsignup.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/chatbot.js"></script>
 </body>
 
 </html>
