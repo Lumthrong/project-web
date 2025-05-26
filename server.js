@@ -396,7 +396,7 @@ function requireLogin(req, res, next) {
   if (req.session && req.session.user) {
     next();
   } else {
-    res.redirect('/login.html');
+    res.redirect('project-web/login.html');
   }
 }
 // Check authentication
