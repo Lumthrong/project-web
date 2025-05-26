@@ -23,11 +23,11 @@
   }
 
   .logo a{
-    font-size: 16px;
+    font-size: 12px;
   }
 
   .menu-toggle {
-    font-size: 26px;
+    font-size: 22px;
     margin-right: auto;
     order: -1;
   }
@@ -756,7 +756,6 @@
     margin: 20px auto;
   }
 }
-
 /*Faculty.css*/
 /* =======================
    Responsive Media Queries
