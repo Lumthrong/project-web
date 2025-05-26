@@ -33,7 +33,9 @@ app.use(express.static(path.join(__dirname, 'docs')));
 
 // MySQL connection pool
 // Adjust paths to your Aiven SSL certs or use environment variables
-const connection = mysql.createConnection({
+async function startServer(){
+try{
+  const connection = mysql.createConnection({
   host: 'mysql25-iamrein22-b134.l.aivencloud.com',
   user: 'avnadmin',
   password: 'AVNS_9fI-t0cKjZwHMs8wk-f',
@@ -45,14 +47,7 @@ const connection = mysql.createConnection({
   }
 });
 
-connection.connect(err => {
-  if (err) {
-    console.error('DB connection error:', err);
-  } else {
-    console.log('Connected to Aiven MySQL!');
-  }
-});
-
+console.log('Connected to MySQL database.');
 
 // Session config
 app.use(session({
@@ -509,3 +504,11 @@ refreshCache();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+  
+} catch (err) {
+    console.error('Failed to connect to MySQL:', err);
+  }
+}
+
+startServer();
