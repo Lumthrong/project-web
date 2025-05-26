@@ -18,7 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Protect links that require login
 document.addEventListener('DOMContentLoaded', () => {
-  fetch('https://project-web-toio.onrender.com/check-auth')
+  fetch('https://project-web-toio.onrender.com/check-auth', {
+    method: 'GET',
+    credentials: 'include'
+  })
     .then(res => res.json())
     .then(data => {
       if (data.loggedIn) {
@@ -42,7 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Auth check failed:', err);
     });
 });
-fetch('https://project-web-toio.onrender.com/check-auth')
+fetch('https://project-web-toio.onrender.com/check-auth', {
+    method: 'GET',
+    credentials: 'include'
+  })
   .then(res => res.json())
   .then(data => {
     if (data.loggedIn) {
