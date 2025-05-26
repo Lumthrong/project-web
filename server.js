@@ -53,13 +53,19 @@ const pool = mysql.createPool({
 console.log('Connected to MySQL database.');
 
 // Session config
+app.set('trust proxy', 1); // Important for secure cookies on Render
+
 app.use(session({
   secret: 'secret-key',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 86400000 } // 24 hours
+  cookie: {
+    maxAge: 86400000,    // 24 hours
+    secure: true,        // must be true on HTTPS (Render is HTTPS)
+    sameSite: 'None',    // required for cross-site cookie sharing
+    httpOnly: true
+  }
 }));
-
 // Passport setup for Google OAuth
 app.use(passport.initialize());
 app.use(passport.session());
