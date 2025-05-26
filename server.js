@@ -29,7 +29,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'docs')));
+app.use(express.static(path.join(__dirname, 'docs','ca.pem')));
 
 // MySQL connection pool
 // Adjust paths to your Aiven SSL certs or use environment variables
