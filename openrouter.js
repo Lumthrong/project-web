@@ -1,5 +1,5 @@
+require('dotenv').config(); // Add this at the very top
 const axios = require('axios');
-
 class ChatAgent {
   constructor() {
     this.apiKey = process.env.OPENROUTER_API_KEY;
@@ -53,3 +53,4 @@ class ChatAgent {
 }
 
 module.exports = ChatAgent;
+console.log('OpenRouter API Key:', this.apiKey);
