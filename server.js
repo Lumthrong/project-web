@@ -1,8 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const { extractContent, extractKeywords } = require('./scraper');
-const ChatAgent = require('./groq');
-const resources = require('./resources.json');
 const path = require('path');
 const session = require('express-session');
 const mysql = require('mysql2/promise');
@@ -11,11 +8,9 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const Bottleneck = require('bottleneck');
+
 const bodyParser = require('body-parser');
 
-const axios = require('axios');
-const cheerio = require('cheerio');
 const marked = require('marked');
 const cors = require('cors');
 const app = express();
@@ -93,168 +88,6 @@ passport.use(new GoogleStrategy({
     return done(err, null);
   }
 }));
-
-// ======== CHATBOT ROUTE ========
-// Configuration
-const validURLs = resources.map(r => r.url.trim());
-const CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
-const DEFAULT_ERROR_MESSAGE = "Our knowledge service is currently unavailable. Please try again later.";
-const MAX_CONTEXT_LENGTH = 2000;
-
-// Rate limiter for scraping
-const limiter = new Bottleneck({
-  minTime: 1500,
-  maxConcurrent: 2,
-  highWater: 5,
-  strategy: Bottleneck.strategy.OVERFLOW
-});
-
-// Cache system
-let contentCache = new Map();
-
-// Initialize cache
-async function initializeCache() {
-  await refreshCache();
-  console.log('Cache initialized with', contentCache.size, 'resources');
-}
-
-// Cache refresh logic
-async function refreshCache() {
-  try {
-    const scrapingQueue = [];
-    
-    resources.forEach((resource) => {
-      scrapingQueue.push(
-        limiter.schedule(async () => {
-          try {
-            const data = await extractContent(resource.url);
-            if (data.status === 'success') {
-              contentCache.set(resource.url, {
-                ...data,
-                displayName: resource.displayName,
-                importance: resource.importance || 1,
-                lastScraped: new Date()
-              });
-            }
-          } catch (error) {
-            console.error(`Scrape failed for ${resource.url}:`, error.message);
-          }
-        })
-      );
-    });
-
-    await Promise.all(scrapingQueue);
-    console.log(`Cache updated - ${contentCache.size} valid resources`);
-  } catch (error) {
-    console.error('Cache refresh failed:', error);
-  }
-  setTimeout(refreshCache, CACHE_TTL);
-}
-// Matching algorithm
-function findBestMatches(queryKeywords) {
-  const matches = [];
-
-  contentCache.forEach((page) => {
-    if (page.status !== 'success') return;
-
-    let pageScore = 0;
-    const matchedSections = [];
-
-    page.content.forEach(section => {
-      const headerScore = queryKeywords.filter(kw => 
-        section.header.toLowerCase().includes(kw)
-        ).length * 2;
-
-      const contentScore = queryKeywords.filter(kw =>
-        section.content.toLowerCase().includes(kw)
-        ).length;
-
-      const sectionScore = headerScore + contentScore;
-      if (sectionScore > 0) {
-        section.score = sectionScore;
-        matchedSections.push(section);
-        pageScore += sectionScore;
-      }
-    });
-
-    pageScore *= page.importance;
-
-    if (pageScore > 0) {
-      matches.push({
-        ...page,
-        score: pageScore,
-        matchedSections: matchedSections.sort((a, b) => b.score - a.score).slice(0, 3)
-      });
-    }
-  });
-
-  return matches.sort((a, b) => b.score - a.score);
-}
-
-// Response helpers
-function isCasual(message) {
-  const cleanMsg = message.toLowerCase().trim();
-  return [
-    'hi', 'hello', 'hey', 'how are you', 
-    'who are you', 'thanks', 'thank you'
-  ].some(phrase => cleanMsg.startsWith(phrase));
-}
-
-function buildContext(match) {
-  let context = `Relevant content from ${match.displayName}:\n`;
-  match.matchedSections.forEach((section, index) => {
-    context += `\n${index + 1}. ${section.header}\n${section.content.substring(0, 150)}...\n`;
-  });
-  return context.substring(0, MAX_CONTEXT_LENGTH);
-}
-
-async function generateAIResponse(query, context, history) {
-  // Replace with your actual AI implementation
-  const prompt = `User asked: ${query}\n\nContext:\n${context}\n\nAnswer concisely:`;
-  return `Based on ${context.split('\n')[0]}: ${prompt.substring(0, 200)}... [Mock response]`;
-}
-
-function formatResponse(response, match) {
-  let cleanResponse = response.replace(/<a\s[^>]*href="[^"]*"[^>]*>.*?<\/a>/gi, '');
-  if (validURLs.includes(match.url)) {
-    cleanResponse += `\n\n<a href="${match.url}" class="page-link">Read more from ${match.displayName}</a>`;
-  }
-  return { response: cleanResponse };
-}
-
-// Routes
-app.post('/get_response', async (req, res) => {
-  try {
-    const { message, history } = req.body;
-    const cleanMessage = message.trim();
-    
-    if (!cleanMessage) {
-      return res.status(400).json({ response: "Please provide a valid message" });
-    }
-
-    if (isCasual(cleanMessage)) {
-      return res.json({ response: "Hello! How can I assist you today?" });
-    }
-
-    const queryKeywords = extractKeywords(cleanMessage);
-    const matches = findBestMatches(queryKeywords);
-    const bestMatch = matches[0]?.score > 2 ? matches[0] : null;
-
-    if (bestMatch) {
-      const context = buildContext(bestMatch);
-      const response = await generateAIResponse(cleanMessage, context, history);
-      return res.json(formatResponse(response, bestMatch));
-    }
-
-    res.json({ 
-      response: "I couldn't find specific information, but here's a general answer: [Mock fallback response]" 
-    });
-  } catch (error) {
-    console.error('Response error:', error);
-    res.status(500).json({ response: DEFAULT_ERROR_MESSAGE });
-  }
-});
-
 // Helpers for username validation
 function isValidIdentifier(value) {
   const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
