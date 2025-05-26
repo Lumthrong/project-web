@@ -163,7 +163,7 @@ function findBestMatches(queryKeywords) {
     page.content.forEach(section => {
       const headerScore = queryKeywords.filter(kw => 
         section.header.toLowerCase().includes(kw)
-        .length * 2;
+        ).length * 2;
 
       const contentScore = queryKeywords.filter(kw =>
         section.content.toLowerCase().includes(kw)
