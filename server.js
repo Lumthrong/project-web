@@ -396,7 +396,7 @@ function requireLogin(req, res, next) {
   if (req.session && req.session.user) {
     next();
   } else {
-    res.redirect('https://lumthrong.github.io/project-web/login.html');
+    res.redirect('/login.html');
   }
 }
 // Check authentication
