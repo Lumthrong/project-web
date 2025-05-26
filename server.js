@@ -167,7 +167,7 @@ function findBestMatches(queryKeywords) {
 
       const contentScore = queryKeywords.filter(kw =>
         section.content.toLowerCase().includes(kw)
-        .length;
+        ).length;
 
       const sectionScore = headerScore + contentScore;
       if (sectionScore > 0) {
