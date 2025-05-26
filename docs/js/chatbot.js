@@ -76,7 +76,7 @@ async function sendMessage() {
   showTypingIndicator();
 
   try {
-    const response = await fetch("/get_response", {
+    const response = await fetch("https://project-web-toio.onrender.com/get_response", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, history: chatHistory })
