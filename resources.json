@@ -1,21 +1,21 @@
 [
   {
-    "url": "http://localhost:3000/about.html",
+    "url": "https://project-web-toio.onrender.com/project-web/about.html",
     "displayName": "About",
     "importance": 5
   },
   {
-    "url": "http://localhost:3000/faculty.html",
+    "url": "https://project-web-toio.onrender.com/project-web/faculty.html",
     "displayName": "Faculty",
     "importance": 4
   },
   {
-    "url": "http://localhost:3000/notification.html",
+    "url": "https://project-web-toio.onrender.com/project-web/notification.html",
     "displayName": "Admissions",
     "importance": 3
   },
   {
-    "url": "http://localhost:3000/student.html",
+    "url": "https://project-web-toio.onrender.com/project-web/student.html",
     "displayName": "Students",
     "importance": 3
   }
