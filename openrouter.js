@@ -21,21 +21,25 @@ class ChatAgent {
     }];
 
     try {
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          "model": "meta-llama/llama-3.3-8b-instruct:free",
-          messages,
-        },
-        { 
-          headers: { 
-          Authorization: `Bearer ${this.apiKey}`,
-          'Referer': process.env.SITE_URL || 'https://lumthrong.github.io/',
-          'Content-Type': 'application/json'
-           },
-          timeout: 100000 // 10 seconds
-        }
-      );
+      const headers = {
+  Authorization: `Bearer ${this.apiKey}`,
+  'Content-Type': 'application/json',
+  'Referer': process.env.SITE_URL || 'https://lumthrong.github.io/',
+};
+
+console.log('HEADERS BEING SENT:', headers);
+
+const response = await axios.post(
+  'https://openrouter.ai/api/v1/chat/completions',
+  {
+    model: "meta-llama/llama-3.3-8b-instruct:free",
+    messages,
+  },
+  {
+    headers,
+    timeout: 10000,
+  }
+);
       
       return this.formatResponse(response.data.choices[0].message.content);
     } catch (error) {
