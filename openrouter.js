@@ -3,6 +3,7 @@ const axios = require('axios');
 class ChatAgent {
   constructor() {
     this.apiKey = process.env.OPENROUTER_API_KEY;
+    console.log('OpenRouter API Key:', this.apiKey);
     this.basePrompt = `You are an official institutional assistant. Follow these rules:
 1. Be precise and factual
 2. Use markdown links for sources
@@ -53,4 +54,3 @@ class ChatAgent {
 }
 
 module.exports = ChatAgent;
-console.log('OpenRouter API Key:', this.apiKey);
