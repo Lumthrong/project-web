@@ -28,9 +28,10 @@ class ChatAgent {
         },
         { 
           headers: { 
-            Authorization: `Bearer ${this.apiKey}`,
-            'HTTP-Referer': process.env.SITE_URL || 'https://lumthrong.github.io/'
-          },
+          Authorization: `Bearer ${this.apiKey}`,
+          'HTTP-Referer': process.env.SITE_URL || 'https://lumthrong.github.io/',
+          'Content-Type': 'application/json'
+           },
           timeout: 100000 // 10 seconds
         }
       );
