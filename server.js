@@ -41,7 +41,7 @@ const connection = mysql.createConnection({
   port: 24234,
   ssl: {
     // If Aiven provides CA cert as a file, load it:
-    ca: fs.readFileSync(path.join(__dirname, 'certs', 'ca.pem'))
+    ca: fs.readFileSync(path.join(__dirname, 'certs'))
   }
 });
 
