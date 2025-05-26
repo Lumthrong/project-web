@@ -54,7 +54,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 86400000,    // 24 hours
+    maxAge: 1000 * 60 * 60 * 24 * 365   // 24 hours
     secure: true,        // must be true on HTTPS (Render is HTTPS)
     sameSite: 'None',    // required for cross-site cookie sharing
     httpOnly: true
