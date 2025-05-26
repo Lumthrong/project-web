@@ -36,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'docs')));
 const connection = mysql.createConnection({
   host: 'mysql25-iamrein22-b134.l.aivencloud.com',
   user: 'avnadmin',
-  password: 'your-password',
+  password: 'AVNS_9fI-t0cKjZwHMs8wk-f',
   database: 'defaultdb',
   port: 24234,
   ssl: {
