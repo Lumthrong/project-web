@@ -70,7 +70,7 @@ passport.deserializeUser((obj, done) => done(null, obj));
 passport.use(new GoogleStrategy({
   clientID: '190509381347-a7i2jlg299jftg17upf55q1f61a4l9nq.apps.googleusercontent.com',
   clientSecret: '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',
-  callbackURL: '/auth/google/callback'
+  callbackURL: 'https://project-web-toio.onrender.com/auth/google/callback'
 }, async (accessToken, refreshToken, profile, done) => {
   const email = profile.emails[0].value;
   try {
