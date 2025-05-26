@@ -104,10 +104,10 @@ async function refreshCache() {
   try {
     await Promise.all(resources.map(async (resource) => {
       const data = await extractContent(resource.url);
-      if (data) contentCache.set(resource.url, { 
-        ...data, 
+      if (data) contentCache.set(resource.url, {
+        ...data,
         displayName: resource.displayName,
-        importance: resource.importance || 1 
+        importance: resource.importance || 1
       });
     }));
   } catch (error) {
@@ -115,21 +115,22 @@ async function refreshCache() {
   }
   setTimeout(refreshCache, CACHE_TTL);
 }
+refreshCache(); // Start cache on server start
 
 // Enhanced Response Endpoint
 app.post('/get_response', async (req, res) => {
   const { message, history } = req.body;
-  
+  const query = message.trim().toLowerCase();
+  const queryKeywords = extractKeywords(query);
+
   try {
-    // 1. Analyze query
-    const queryKeywords = extractKeywords(message.toLowerCase());
     let bestMatch = null;
     let maxScore = 0;
 
-    // 2. Find best match
+    // 1. Search contentCache for best match
     contentCache.forEach((page) => {
-      let score = page.content.reduce((total, section) => {
-        const headerMatches = queryKeywords.filter(kw => 
+      const score = page.content.reduce((total, section) => {
+        const headerMatches = queryKeywords.filter(kw =>
           section.header.toLowerCase().includes(kw)
         ).length;
         const contentMatches = queryKeywords.filter(kw =>
@@ -144,31 +145,52 @@ app.post('/get_response', async (req, res) => {
       }
     });
 
-    // 3. Generate response
     const agent = new ChatAgent();
     let response;
-    
-    if (bestMatch && maxScore > 3) {
+
+    // 2. Define casual fallback triggers
+    const casualIntents = ['hi', 'hello', 'hey', 'good morning', 'good evening'];
+
+    // 3. Evaluate fallback conditions
+    const matchedSections = bestMatch?.content.filter(section =>
+      queryKeywords.some(kw =>
+        section.header.toLowerCase().includes(kw) ||
+        section.content.toLowerCase().includes(kw)
+      )
+    ) || [];
+
+    const shouldUseContext =
+      bestMatch &&
+      maxScore > 3 &&
+      queryKeywords.length > 2 &&
+      matchedSections.length > 0 &&
+      !casualIntents.includes(query);
+
+    if (shouldUseContext) {
       const context = `Relevant content from ${bestMatch.displayName}:\n${
-        bestMatch.content.map(s => `• ${s.header}: ${s.content.substring(0, 150)}...`).join('\n')
+        matchedSections.slice(0, 5).map(s =>
+          `• ${s.header}: ${s.content.substring(0, 150)}...`
+        ).join('\n')
       }`;
-      
+
       response = await agent.generateResponse(
         `Question: ${message}\n${context}`,
         history
       );
+
       response += `\n\n<a href="${bestMatch.url}" class="page-link">${bestMatch.displayName}</a>`;
     } else {
-      response = await agent.generateResponse(message, history) || 
-        "I'm still learning about our institution. Please visit our website for detailed information.";
+      // Default LLM fallback
+      response = await agent.generateResponse(message, history) ||
+        "I'm still learning about our institution. Please visit our website for more information.";
     }
 
     res.json({ response });
-    
+
   } catch (error) {
     console.error('Response error:', error);
-    res.status(500).json({ 
-      response: "Our knowledge service is currently unavailable. Please try again later." 
+    res.status(500).json({
+      response: "Our knowledge service is currently unavailable. Please try again later."
     });
   }
 });
