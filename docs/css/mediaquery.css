@@ -94,14 +94,14 @@
   }
 
   .logo a{
-    font-size: 28px;
+    font-size: 20px;
   }
   .nav{
     display: flex;
     justify-content: left;
   }
   .menu-toggle {
-    font-size: 38px;
+    font-size: 28px;
   }
   .navbar {
     width: 250px;
