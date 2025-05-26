@@ -464,7 +464,7 @@ app.post('/reset-password', async (req, res) => {
 app.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/Login.html' }),
+  passport.authenticate('google', { failureRedirect: '/login.html' }),
   (req, res) => {
     req.session.user = { username: req.user.username };
     res.redirect('/index.html');
@@ -475,7 +475,7 @@ function requireLogin(req, res, next) {
   if (req.session && req.session.user) {
     next();
   } else {
-    res.redirect('/Login.html');
+    res.redirect('/login.html');
   }
 }
 // Check authentication
