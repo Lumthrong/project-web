@@ -37,7 +37,7 @@ const connection = mysql.createConnection({
   host: 'mysql25-iamrein22-b134.l.aivencloud.com',
   user: 'avnadmin',
   password: 'AVNS_9fI-t0cKjZwHMs8wk-f',
-  database: 'defaultdb',
+  database: 'school',
   port: 24234,
   ssl: {
     // If Aiven provides CA cert as a file, load it:
