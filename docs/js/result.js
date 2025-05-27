@@ -10,7 +10,7 @@ function initDateDropdowns() {
         {value: '11', name: 'November'}, {value: '12', name: 'December'}
     ];
     const currentYear = new Date().getFullYear();
-    const years = Array.from({length: 25}, (_, i) => currentYear - 18 + i);
+    const years = Array.from({length: 20}, (_, i) => currentYear - 25 + i);
 
     const daySelect = document.getElementById('dobDay');
     const monthSelect = document.getElementById('dobMonth');
