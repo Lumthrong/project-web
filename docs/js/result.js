@@ -55,7 +55,7 @@
             const message = document.getElementById('adminMessage');
             
             try {
-                const response = await fetch('/admin-login', {
+                const response = await fetch('https://project-web-toio.onrender.com/admin-login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ username, password })
@@ -96,7 +96,7 @@
             formData.append('csvfile', file);
 
             try {
-                const response = await fetch('/upload-csv', {
+                const response = await fetch('https://project-web-toio.onrender.com/upload-csv', {
                     method: 'POST',
                     body: formData
                 });
@@ -130,7 +130,7 @@
             const table = document.getElementById('resultTable');
 
             try {
-                const response = await fetch('/check-result', {
+                const response = await fetch('https://project-web-toio.onrender.com/check-result', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ name, dob, roll_no })
@@ -187,7 +187,7 @@
                 document.getElementById('dobDay').value}`;
 
             try {
-                const response = await fetch('/download-pdf', {
+                const response = await fetch('https://project-web-toio.onrender.com/download-pdf', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ name, dob, roll_no })
