@@ -1,5 +1,12 @@
+
 // Initialize date dropdowns
 function initDateDropdowns() {
+    const daySelect = document.getElementById('dobDay');
+    const monthSelect = document.getElementById('dobMonth');
+    const yearSelect = document.getElementById('dobYear');
+
+    if (!daySelect || !monthSelect || !yearSelect) return;
+
     const days = Array.from({length: 31}, (_, i) => i + 1);
     const months = [
         {value: '01', name: 'January'}, {value: '02', name: 'February'}, 
@@ -12,11 +19,6 @@ function initDateDropdowns() {
     const currentYear = new Date().getFullYear();
     const years = Array.from({length: 30}, (_, i) => currentYear - 25 + i);
 
-    const daySelect = document.getElementById('dobDay');
-    const monthSelect = document.getElementById('dobMonth');
-    const yearSelect = document.getElementById('dobYear');
-
-    // Add days
     days.forEach(day => {
         const option = document.createElement('option');
         option.value = day.toString().padStart(2, '0');
@@ -24,7 +26,6 @@ function initDateDropdowns() {
         daySelect.appendChild(option);
     });
 
-    // Add months
     months.forEach(month => {
         const option = document.createElement('option');
         option.value = month.value;
@@ -32,7 +33,6 @@ function initDateDropdowns() {
         monthSelect.appendChild(option);
     });
 
-    // Add years
     years.forEach(year => {
         const option = document.createElement('option');
         option.value = year;
@@ -40,7 +40,6 @@ function initDateDropdowns() {
         yearSelect.appendChild(option);
     });
 
-    // Set default to current date
     const today = new Date();
     daySelect.value = today.getDate().toString().padStart(2, '0');
     monthSelect.value = (today.getMonth() + 1).toString().padStart(2, '0');
@@ -53,7 +52,7 @@ async function adminLogin(e) {
     const username = document.getElementById('adminUsername').value;
     const password = document.getElementById('adminPassword').value;
     const message = document.getElementById('adminMessage');
-    
+
     try {
         const response = await fetch('https://project-web-toio.onrender.com/admin-login', {
             method: 'POST',
@@ -61,9 +60,9 @@ async function adminLogin(e) {
             body: JSON.stringify({ username, password }),
             credentials: 'include'
         });
-        
+
         const data = await response.json();
-        
+
         if (data.status === 'success') {
             message.textContent = 'Login successful!';
             message.className = 'message success';
@@ -85,9 +84,16 @@ async function adminLogin(e) {
 async function uploadCSV() {
     const file = document.getElementById('csvFile').files[0];
     const message = document.getElementById('csvMessage');
-    
+
     if (!file) {
         message.textContent = 'Please select a CSV file first';
+        message.className = 'message error';
+        message.classList.remove('hidden');
+        return;
+    }
+
+    if (!file.name.endsWith('.csv')) {
+        message.textContent = 'Only .csv files are allowed.';
         message.className = 'message error';
         message.classList.remove('hidden');
         return;
@@ -121,12 +127,12 @@ async function uploadCSV() {
 // Check result
 async function checkResult(e) {
     e.preventDefault();
-    const name = document.getElementById('studentName').value;
-    const roll_no = document.getElementById('rollNumber').value;
-    const dob = `${document.getElementById('dobYear').value}-${
-        document.getElementById('dobMonth').value}-${
-        document.getElementById('dobDay').value}`;
-    
+    const name = document.getElementById('studentName')?.value;
+    const roll_no = document.getElementById('rollNumber')?.value;
+    const dob = `${document.getElementById('dobYear')?.value}-${
+        document.getElementById('dobMonth')?.value}-${
+        document.getElementById('dobDay')?.value}`;
+
     const message = document.getElementById('resultMessage');
     const resultDisplay = document.getElementById('resultDisplay');
     const table = document.getElementById('resultTable');
@@ -140,13 +146,12 @@ async function checkResult(e) {
         });
 
         const data = await response.json();
-        
+
         if (data.status === 'success') {
             message.textContent = '';
             message.className = '';
             message.classList.add('hidden');
-            
-            // Populate table
+
             table.innerHTML = `
                 <thead>
                     <tr>
@@ -165,7 +170,7 @@ async function checkResult(e) {
                     `).join('')}
                 </tbody>
             `;
-            
+
             resultDisplay.classList.remove('hidden');
         } else {
             message.textContent = 'No results found. Please check your details.';
@@ -181,22 +186,13 @@ async function checkResult(e) {
     }
 }
 
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    initDateDropdowns();
-    
-    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
-    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
-    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
-    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
-});
 // Download PDF
 async function downloadPDF() {
-    const name = document.getElementById('studentName').value;
-    const roll_no = document.getElementById('rollNumber').value;
-    const dob = `${document.getElementById('dobYear').value}-${
-        document.getElementById('dobMonth').value}-${
-        document.getElementById('dobDay').value}`;
+    const name = document.getElementById('studentName')?.value;
+    const roll_no = document.getElementById('rollNumber')?.value;
+    const dob = `${document.getElementById('dobYear')?.value}-${
+        document.getElementById('dobMonth')?.value}-${
+        document.getElementById('dobDay')?.value}`;
 
     try {
         const response = await fetch('https://project-web-toio.onrender.com/download-pdf', {
@@ -221,7 +217,17 @@ async function downloadPDF() {
     }
 }
 
-//admin login/logout 
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initDateDropdowns();
+
+    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
+});
+
+// Admin session check
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await fetch('https://project-web-toio.onrender.com/check-admin-session', {
@@ -229,16 +235,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     const data = await res.json();
     if (data.loggedIn) {
-      document.getElementById('authItem').style.display = 'none';
-      document.getElementById('logoutItem').style.display = 'block';
-      document.getElementById('usernameDisplay').textContent = `Logged in as ${data.username}`;
-      document.getElementById('adminControls').classList.remove('hidden');
+      document.getElementById('authItem')?.style.display = 'none';
+      document.getElementById('logoutItem')?.style.display = 'block';
+      document.getElementById('usernameDisplay')?.textContent = `Logged in as ${data.username}`;
+      document.getElementById('adminControls')?.classList.remove('hidden');
     }
   } catch (err) {
     console.error("Session check failed", err);
   }
 });
 
+// Admin logout
 document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
   e.preventDefault();
   await fetch('https://project-web-toio.onrender.com/admin-logout', {
@@ -247,4 +254,3 @@ document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
   });
   window.location.reload();
 });
-
