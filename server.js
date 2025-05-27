@@ -18,6 +18,9 @@ const marked = require('marked');
 const cors = require('cors');
 const app = express();
 
+const password = 'Admin@123'; // Change this to your desired password
+const hashedPassword = await bcrypt.hash(password, 10);
+
 
 const signupOtpStore = new Map(); // OTP store for signup verification
 const otpStore = new Map();
@@ -429,6 +432,11 @@ protectedPages.forEach(page => {
 
 //admin and result check route
 // Admin endpoints
+await pool.query(
+  'INSERT INTO admins (username, password) VALUES (?, ?)',
+  ['admin', hashedPassword]
+);
+
 app.post('/admin-login', async (req, res) => {
   const { username, password } = req.body;
   try {
