@@ -437,19 +437,27 @@ protectedPages.forEach(page => {
 
 //admin and result check route
 // Admin endpoints
-await pool.query(
-  'INSERT INTO admins (username, password) VALUES (?, ?)',
-  ['admin', hashedPassword]
-);
+const [existingAdmins] = await pool.query('SELECT * FROM admins WHERE username = ?', ['admin']);
+if (existingAdmins.length === 0) {
+  await pool.query(
+    'INSERT INTO admins (username, password) VALUES (?, ?)',
+    ['admin', hashedPassword]
+  );
+}
 
 app.post('/admin-login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const [rows] = await pool.query("SELECT * FROM admins WHERE username=?", [username]);
     if (rows.length === 0) return res.json({ status: 'fail' });
-    
+
     const match = await bcrypt.compare(password, rows[0].password);
-    res.json({ status: match ? 'success' : 'fail' });
+    if (match) {
+      req.session.admin = username; // <-- Store session here
+      return res.json({ status: 'success' });
+    } else {
+      return res.json({ status: 'fail' });
+    }
   } catch (err) {
     console.error('Admin login error:', err);
     res.json({ status: 'fail' });
@@ -461,6 +469,12 @@ app.get('/check-admin-session', (req, res) => {
   } else {
     res.json({ loggedIn: false });
   }
+});
+app.post('/admin-logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logged out' });
+  });
 });
 
 app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
