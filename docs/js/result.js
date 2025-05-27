@@ -216,15 +216,7 @@ async function downloadPDF() {
         alert('Failed to download PDF. Please try again.');
     }
 }
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    initDateDropdowns();
 
-    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
-    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
-    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
-    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
-});
 // Admin session check
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -251,4 +243,13 @@ document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
     credentials: 'include'
   });
   window.location.reload();
+});
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initDateDropdowns();
+
+    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
 });
