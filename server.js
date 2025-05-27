@@ -455,6 +455,13 @@ app.post('/admin-login', async (req, res) => {
     res.json({ status: 'fail' });
   }
 });
+app.get('/check-admin-session', (req, res) => {
+  if (req.session && req.session.admin) {
+    res.json({ loggedIn: true, username: req.session.admin });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
 
 app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
   const results = [];
