@@ -48,6 +48,7 @@ function initDateDropdowns() {
 }
 
 // Admin login
+document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
 async function adminLogin(e) {
     e.preventDefault();
     const username = document.getElementById('adminUsername').value;
