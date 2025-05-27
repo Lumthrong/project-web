@@ -1,0 +1,88 @@
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Result</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/result.css" />
+  <link rel="stylesheet" href="css/mediaquery.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1 class="logo"><a href="index.html">Little Flower Higher Secondary School</a></h1>
+    <div class="nav">
+      <button id="menuToggle" class="menu-toggle"><i class="fa fa-bars"></i></button>
+      <nav class="navbar">
+        <ul class="menu">
+          <li><a href="index.html" class="active">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="facilities.html">Facilities</a></li>
+          <li><a href="notification.html">Notification</a></li>
+          <li id="authItem"><a href="login.html" id="authLink"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+          <li id="logoutItem" style="display: none;">
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <div id="usernameDisplay"></div>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+        <div class="result-system-container">
+                   <!-- Admin Section -->
+            <div class="result-card">
+                <h2><i class="fas fa-lock"></i> Admin Login</h2>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Username</label>
+                        <input type="text" id="adminUsername" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                    <div id="adminMessage" class="message hidden"></div>
+                </form>
+
+                <div id="adminControls" class="hidden">
+                    <h2><i class="fas fa-upload"></i> Upload Results</h2>
+                    <div class="form-group">
+                        <label for="csvFile">Select CSV File</label>
+                        <input type="file" id="csvFile" class="form-control" accept=".csv">
+                    </div>
+                    <button id="uploadCsvBtn" class="btn">Upload Results</button>
+                    <div id="csvMessage" class="message hidden"></div>
+                </div>
+            </div>
+         </div>
+ </main>
+     <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+      <h1>Quick Links</h1>
+      <ul>
+        <li><a href="student.html">Student</a></li>
+        <li><a href="faculty.html">Faculty</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="footer-end">
+      <div class="footer-info"></div>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+      </div>
+    </div>
+    <p>2025 Little Flower Higher Secondary School. All rights reserved.</p>
+  </footer>
+
+    <script src="js/result.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/loginsignup.js"></script>
+</body>
+</html>
