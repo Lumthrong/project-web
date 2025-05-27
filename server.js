@@ -11,7 +11,7 @@ import bodyParser from 'body-parser';
 import multer from 'multer';
 import csv from 'csv-parser';
 import PDFDocument from 'pdfkit';
-import marked from 'marked';
+import { marked } from 'marked';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
