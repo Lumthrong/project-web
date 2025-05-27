@@ -1,13 +1,3 @@
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    initDateDropdowns();
-    
-    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
-    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
-    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
-    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
-});
-
 // Initialize date dropdowns
 function initDateDropdowns() {
     const days = Array.from({length: 31}, (_, i) => i + 1);
@@ -191,6 +181,15 @@ async function checkResult(e) {
     }
 }
 
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initDateDropdowns();
+    
+    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
+});
 // Download PDF
 async function downloadPDF() {
     const name = document.getElementById('studentName').value;
