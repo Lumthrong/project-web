@@ -59,7 +59,9 @@
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s ease;
 }
-
+.auth-container form button a{
+  color: white;
+}
 .auth-container form button:hover {
   background: #9A2A2A;
   transform: translateY(-1px);
