@@ -1,21 +1,26 @@
-const express = require('express');
-const path = require('path');
-const session = require('express-session');
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt');
-const fs = require('fs');
-const nodemailer = require('nodemailer');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+import express from 'express';
+import path from 'path';
+import session from 'express-session';
+import mysql from 'mysql2/promise';
+import bcrypt from 'bcrypt';
+import fs from 'fs';
+import nodemailer from 'nodemailer';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import bodyParser from 'body-parser';
+import multer from 'multer';
+import csv from 'csv-parser';
+import PDFDocument from 'pdfkit';
+import marked from 'marked';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const bodyParser = require('body-parser');
-const multer = require('multer');
-const csv = require('csv-parser');
-const PDFDocument = require('pdfkit');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const upload = multer({ dest: 'uploads/' });
 
-const marked = require('marked');
-const cors = require('cors');
 const app = express();
 
 const password = 'Admin@123'; // Change this to your desired password
