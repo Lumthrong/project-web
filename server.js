@@ -428,79 +428,115 @@ protectedPages.forEach(page => {
 });
 
 //admin and result check route
-// Admin login
-app.post('/admin-login', (req, res) => {
+// Admin endpoints
+app.post('/admin-login', async (req, res) => {
   const { username, password } = req.body;
-  db.query("SELECT * FROM admins WHERE username=?", [username], (err, result) => {
-    if (err || result.length === 0) return res.json({ status: 'fail' });
-    bcrypt.compare(password, result[0].password, (err, match) => {
-      res.json({ status: match ? 'success' : 'fail' });
-    });
-  });
+  try {
+    const [rows] = await pool.query("SELECT * FROM admins WHERE username=?", [username]);
+    if (rows.length === 0) return res.json({ status: 'fail' });
+    
+    const match = await bcrypt.compare(password, rows[0].password);
+    res.json({ status: match ? 'success' : 'fail' });
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.json({ status: 'fail' });
+  }
 });
 
-// CSV upload (admin only)
-app.post('/upload-csv', upload.single('csvfile'), (req, res) => {
+app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
   const results = [];
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on('data', data => results.push(data))
-    .on('end', () => {
-      results.forEach(row => {
-        const { name, dob, roll_no, subject, marks, grade } = row;
-        db.query("SELECT id FROM students WHERE roll_no=?", [roll_no], (err, studentRes) => {
-          if (studentRes.length === 0) {
-            db.query("INSERT INTO students (name, dob, roll_no) VALUES (?, ?, ?)",
-              [name, dob, roll_no], (err, insertRes) => {
-                const student_id = insertRes.insertId;
-                db.query("INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
-                  [student_id, subject, marks, grade]);
-              });
+    .on('end', async () => {
+      try {
+        for (const row of results) {
+          const { name, dob, roll_no, subject, marks, grade } = row;
+          const [students] = await pool.query("SELECT id FROM students WHERE roll_no=?", [roll_no]);
+          
+          if (students.length === 0) {
+            const [insertRes] = await pool.query(
+              "INSERT INTO students (name, dob, roll_no) VALUES (?, ?, ?)",
+              [name, dob, roll_no]
+            );
+            const student_id = insertRes.insertId;
+            await pool.query(
+              "INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
+              [student_id, subject, marks, grade]
+            );
           } else {
-            const student_id = studentRes[0].id;
-            db.query("INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
-              [student_id, subject, marks, grade]);
+            const student_id = students[0].id;
+            await pool.query(
+              "INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
+              [student_id, subject, marks, grade]
+            );
           }
-        });
-      });
-      res.send("CSV uploaded");
+        }
+        res.send("CSV uploaded successfully");
+      } catch (err) {
+        console.error('CSV upload error:', err);
+        res.status(500).send("Error processing CSV");
+      }
     });
 });
 
-// Check result
-app.post('/check-result', (req, res) => {
+// Result endpoints
+app.post('/check-result', async (req, res) => {
   const { name, dob, roll_no } = req.body;
-  db.query("SELECT id FROM students WHERE name=? AND dob=? AND roll_no=?",
-    [name, dob, roll_no], (err, result) => {
-      if (result.length === 0) return res.json({ status: 'fail' });
-      const studentId = result[0].id;
-      db.query("SELECT subject, marks, grade FROM results WHERE student_id=?",
-        [studentId], (err2, results) => {
-          res.json({ status: 'success', results });
-        });
-    });
+  try {
+    const [students] = await pool.query(
+      "SELECT id FROM students WHERE name=? AND dob=? AND roll_no=?",
+      [name, dob, roll_no]
+    );
+    
+    if (students.length === 0) return res.json({ status: 'fail' });
+    
+    const studentId = students[0].id;
+    const [results] = await pool.query(
+      "SELECT subject, marks, grade FROM results WHERE student_id=?",
+      [studentId]
+    );
+    
+    res.json({ status: 'success', results });
+  } catch (err) {
+    console.error('Check result error:', err);
+    res.json({ status: 'fail' });
+  }
 });
 
-// Download PDF
-app.post('/download-pdf', (req, res) => {
+app.post('/download-pdf', async (req, res) => {
   const { name, dob, roll_no } = req.body;
-  db.query("SELECT id FROM students WHERE name=? AND dob=? AND roll_no=?", [name, dob, roll_no], (err, result) => {
-    if (result.length === 0) return res.status(404).send("Student not found");
-    const studentId = result[0].id;
-    db.query("SELECT subject, marks, grade FROM results WHERE student_id=?", [studentId], (err2, results) => {
-      const doc = new PDFDocument();
-      res.setHeader('Content-disposition', 'attachment; filename=result.pdf');
-      res.setHeader('Content-type', 'application/pdf');
-      doc.pipe(res);
-      doc.fontSize(20).text("Result", { align: 'center' });
-      doc.fontSize(14).text(`Name: ${name}`);
-      doc.text(`Roll No: ${roll_no}`);
-      doc.text(`DOB: ${dob}`);
-      doc.moveDown();
-      results.forEach(r => doc.text(`${r.subject}: ${r.marks} - ${r.grade}`));
-      doc.end();
-    });
-  });
+  try {
+    const [students] = await pool.query(
+      "SELECT id FROM students WHERE name=? AND dob=? AND roll_no=?", 
+      [name, dob, roll_no]
+    );
+    
+    if (students.length === 0) return res.status(404).send("Student not found");
+    
+    const studentId = students[0].id;
+    const [results] = await pool.query(
+      "SELECT subject, marks, grade FROM results WHERE student_id=?", 
+      [studentId]
+    );
+    
+    const doc = new PDFDocument();
+    res.setHeader('Content-disposition', `attachment; filename=${name}_${roll_no}_result.pdf`);
+    res.setHeader('Content-type', 'application/pdf');
+    doc.pipe(res);
+    
+    doc.fontSize(20).text("Result", { align: 'center' });
+    doc.fontSize(14).text(`Name: ${name}`);
+    doc.text(`Roll No: ${roll_no}`);
+    doc.text(`DOB: ${dob}`);
+    doc.moveDown();
+    
+    results.forEach(r => doc.text(`${r.subject}: ${r.marks} - ${r.grade}`));
+    doc.end();
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    res.status(500).send("Error generating PDF");
+  }
 });
 
 // ========== START SERVER ==========
