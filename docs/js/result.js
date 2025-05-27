@@ -79,15 +79,7 @@ async function adminLogin(e) {
         message.classList.remove('hidden');
     }
 }
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    initDateDropdowns();
 
-    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
-    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
-    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
-    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
-});
 // CSV upload
 async function uploadCSV() {
     const file = document.getElementById('csvFile').files[0];
@@ -224,7 +216,15 @@ async function downloadPDF() {
         alert('Failed to download PDF. Please try again.');
     }
 }
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initDateDropdowns();
 
+    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
+});
 // Admin session check
 document.addEventListener('DOMContentLoaded', async () => {
   try {
