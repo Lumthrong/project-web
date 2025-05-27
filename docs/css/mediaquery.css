@@ -182,12 +182,17 @@
   .menu li a {
     font-size: 18px;
     padding: 10px;
+    transition: all 0.3s ease;
   }
 .menu li a.active {
-  background: #b13b3b;      /* Highlight color */
+  background: none;
   color: white !important;  /* Ensure readability */
   font-weight: bold;
-  border-radius: 4px;
+  border:2px solid #b13b3b;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  transition: all 0.3s ease;
 }
 
   footer {
@@ -255,10 +260,14 @@
   }
 
 .menu li a.active {
-  background: #b13b3b;      /* Highlight color */
+  background: none;      /* Highlight color */
   color: white !important;  /* Ensure readability */
   font-weight: bold;
-  border-radius: 4px;
+  border:2px solid #b13b3b;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  transition: all 0.3s ease;
 }
   footer {
     padding: 40px 60px 40px;
