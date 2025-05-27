@@ -1,3 +1,13 @@
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initDateDropdowns();
+    
+    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
+});
+
 // Initialize date dropdowns
 function initDateDropdowns() {
     const days = Array.from({length: 31}, (_, i) => i + 1);
@@ -47,8 +57,7 @@ function initDateDropdowns() {
     yearSelect.value = today.getFullYear() - 10;
 }
 
-// Admin login
-document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+// Admin Login
 async function adminLogin(e) {
     e.preventDefault();
     const username = document.getElementById('adminUsername').value;
@@ -212,16 +221,6 @@ async function downloadPDF() {
         alert('Failed to download PDF. Please try again.');
     }
 }
-
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    initDateDropdowns();
-    
-    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
-    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
-    document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
-    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
-});
 
 //admin login/logout 
 document.addEventListener('DOMContentLoaded', async () => {
