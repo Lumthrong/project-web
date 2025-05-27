@@ -221,3 +221,40 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resultCheckForm')?.addEventListener('submit', checkResult);
     document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
 });
+
+//admin login/logout 
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('https://project-web-toio.onrender.com/check-admin-session', {
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.loggedIn) {
+      document.getElementById('authItem').style.display = 'none';
+      document.getElementById('logoutItem').style.display = 'block';
+      document.getElementById('usernameDisplay').textContent = `Logged in as ${data.username}`;
+      document.getElementById('adminControls').classList.remove('hidden');
+    }
+  } catch (err) {
+    console.error("Session check failed", err);
+  }
+});
+
+document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  await fetch('https://project-web-toio.onrender.com/admin-logout', {
+    method: 'POST',
+    credentials: 'include'
+  });
+  window.location.reload();
+});
+
+//file type csv validation 
+if (!file.name.endsWith('.csv')) {
+    message.textContent = 'Only .csv files are allowed.';
+    message.className = 'message error';
+    message.classList.remove('hidden');
+    return;
+}
+
+
