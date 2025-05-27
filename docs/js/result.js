@@ -248,12 +248,3 @@ document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
   window.location.reload();
 });
 
-//file type csv validation 
-if (!file.name.endsWith('.csv')) {
-    message.textContent = 'Only .csv files are allowed.';
-    message.className = 'message error';
-    message.classList.remove('hidden');
-    return;
-}
-
-
