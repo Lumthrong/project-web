@@ -27,6 +27,40 @@ const signupOtpStore = new Map(); // OTP store for signup verification
 const otpStore = new Map();
 const PORT = process.env.PORT || 3000; // Use the port provided by Render
 
+// Clean URL routes
+const pages = [
+  'index',
+  'about',
+  'facilities',
+  'login',
+  'signup',
+  'reset',
+  'verify',
+  'gallery',
+  'contact',
+  'admin',
+  'notification',
+  'result',
+  'student',
+  'recover',
+  'faculty',
+  'forgot'
+];
+
+// Generate routes dynamically
+pages.forEach(page => {
+  const route = page === 'index' ? '/' : `/${page}`;
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, 'docs', `${page}.html`));
+  });
+});
+
+// Optional: 404 handler
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'docs', '404.html'));
+});
+
+//
 app.use(cors({
   origin: 'https://lumthrong.github.io',
   credentials: true
