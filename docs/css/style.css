@@ -27,14 +27,19 @@ main {
   flex: 1;
 }
 
+/* Header */
 .header {
   background: #7B1818;
   padding: 20px;
   color: #fff;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  z-index: 1001;
 }
 
+/* Logo */
 .logo {
   color: white;
   text-decoration: none;
@@ -50,6 +55,7 @@ main {
   font-weight: bold;
 }
 
+/* Menu Toggle */
 .menu-toggle {
   background: none;
   border: none;
@@ -62,38 +68,36 @@ main {
   color: #f39c12;
 }
 
-/* Navbar */
+/* Nav Wrapper */
 .nav {
-  box-shadow: 2px 2px 10px regba(0, 0, 0, 0.15);
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
   display: flex;
-  gap: 5%;
+  flex-direction: column;
+  width: 100%;
 }
 
+/* Navbar */
 .navbar {
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.5s ease;
   flex-direction: column;
-  flex-direction: column;
-  position: absolute;
-  margin-top: 30px;
   background: #7B1818;
-  width: 250px;
+  width: 100%;
   z-index: 1000;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
+  position: static; /* Ensures it appears below the header */
+  margin-top: 0;
 }
 
+/* When Navbar is active/open */
 .navbar.active {
-  display: block;
-}
-
-.navbar.open {
   display: flex;
   max-height: 500px;
-  background: #7B1818;
 }
 
+/* Menu List */
 .menu {
   list-style: none;
   margin: 0;
@@ -110,12 +114,13 @@ main {
   text-decoration: none;
   padding: 10px 20px;
   display: block;
-  bottom: 200px;
   font-size: 18px;
 }
-.menu li a.active{
+
+.menu li a.active {
   background: #b13b3b;
 }
+
 .menu li a:hover {
   background: #9A2A2A;
   width: 100%;
