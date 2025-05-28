@@ -37,8 +37,12 @@ main {
   position: sticky;
   top: 0;
   z-index: 1001;
+  text-align: center;
+  align-items:center;
 }
-
+.header img{
+  width:140px;
+}
 /* Logo */
 .logo {
   color: white;
@@ -103,6 +107,7 @@ main {
   margin: 0;
   padding: 0;
   background: #7B1818;
+  text-align: left;
 }
 
 .menu li {
