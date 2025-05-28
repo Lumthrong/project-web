@@ -80,11 +80,8 @@ async function uploadCSV() {
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     initDateDropdowns();
-    
     document.getElementById('adminLoginForm').addEventListener('submit', adminLogin);
     document.getElementById('uploadCsvBtn').addEventListener('click', uploadCSV);
-    document.getElementById('resultCheckForm').addEventListener('submit', checkResult);
-    document.getElementById('downloadPdfBtn').addEventListener('click', downloadPDF);
 });
 
 // Admin session check
