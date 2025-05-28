@@ -9,6 +9,7 @@
         .result-system-container {
             max-width: 1200px;
             display: flex;
+            justify-content: center;
         }
         .result-card {
             background: white;
