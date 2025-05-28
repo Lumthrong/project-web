@@ -23,10 +23,6 @@ const upload = multer({ dest: 'uploads/' });
 
 const app = express();
 
-const password = 'Admin@123'; // Change this to your desired password
-const hashedPassword = await bcrypt.hash(password, 10);
-
-
 const signupOtpStore = new Map(); // OTP store for signup verification
 const otpStore = new Map();
 const PORT = process.env.PORT || 3000; // Use the port provided by Render
@@ -436,24 +432,26 @@ protectedPages.forEach(page => {
 });
 
 //admin and result check route
-// Admin endpoints
-const [existingAdmins] = await pool.query('SELECT * FROM admins WHERE username = ?', ['admin']);
-if (existingAdmins.length === 0) {
-  await pool.query(
-    'INSERT INTO admins (username, password) VALUES (?, ?)',
-    ['admin', hashedPassword]
-  );
-}
+// Hash and insert default admin (run only once)
+(async () => {
+  const password = 'Admin@123'; // Change this
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const [existingAdmins] = await pool.query('SELECT * FROM admins WHERE username = ?', ['admin']);
+  if (existingAdmins.length === 0) {
+    await pool.query('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', hashedPassword]);
+  }
+})();
 
+// Admin login
 app.post('/admin-login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [rows] = await pool.query("SELECT * FROM admins WHERE username=?", [username]);
+    const [rows] = await pool.query("SELECT * FROM admins WHERE username = ?", [username]);
     if (rows.length === 0) return res.json({ status: 'fail' });
 
     const match = await bcrypt.compare(password, rows[0].password);
     if (match) {
-      req.session.admin = username; // <-- Store session here
+      req.session.admin = username;
       return res.json({ status: 'success' });
     } else {
       return res.json({ status: 'fail' });
@@ -463,6 +461,8 @@ app.post('/admin-login', async (req, res) => {
     res.json({ status: 'fail' });
   }
 });
+
+// Admin session check
 app.get('/check-admin-session', (req, res) => {
   if (req.session && req.session.admin) {
     res.json({ loggedIn: true, username: req.session.admin });
@@ -470,6 +470,8 @@ app.get('/check-admin-session', (req, res) => {
     res.json({ loggedIn: false });
   }
 });
+
+// Admin logout
 app.post('/admin-logout', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
@@ -477,8 +479,10 @@ app.post('/admin-logout', (req, res) => {
   });
 });
 
+// CSV upload
 app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
   const results = [];
+
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on('data', data => results.push(data))
@@ -486,26 +490,26 @@ app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
       try {
         for (const row of results) {
           const { name, dob, roll_no, subject, marks, grade } = row;
-          const [students] = await pool.query("SELECT id FROM students WHERE roll_no=?", [roll_no]);
-          
+          const [students] = await pool.query("SELECT id FROM students WHERE roll_no = ?", [roll_no]);
+
+          let student_id;
           if (students.length === 0) {
             const [insertRes] = await pool.query(
               "INSERT INTO students (name, dob, roll_no) VALUES (?, ?, ?)",
               [name, dob, roll_no]
             );
-            const student_id = insertRes.insertId;
-            await pool.query(
-              "INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
-              [student_id, subject, marks, grade]
-            );
+            student_id = insertRes.insertId;
           } else {
-            const student_id = students[0].id;
-            await pool.query(
-              "INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
-              [student_id, subject, marks, grade]
-            );
+            student_id = students[0].id;
           }
+
+          await pool.query(
+            "INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
+            [student_id, subject, marks, grade]
+          );
         }
+
+        fs.unlink(req.file.path, () => {}); // Remove uploaded file
         res.send("CSV uploaded successfully");
       } catch (err) {
         console.error('CSV upload error:', err);
