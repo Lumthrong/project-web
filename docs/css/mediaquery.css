@@ -19,7 +19,6 @@
   .header {
     padding: 10px;
     display: flex;
-    text-align: center;
   }
 
   .logo a{
@@ -38,8 +37,9 @@
 
   .navbar {
     position: absolute;
-    top: 60px;
-    width: 100%;
+    display: flex;
+    top: 0;
+    width: 180px;
     max-height: 0;
     overflow: hidden;
     flex-direction: column;
@@ -105,7 +105,7 @@
   }
   .navbar {
     width: 250px;
-    top: 75px;
+    top: 70px;
     max-height: 0;
     overflow: hidden;
   }
