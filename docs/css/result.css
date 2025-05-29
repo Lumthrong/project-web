@@ -160,3 +160,18 @@
         #addNotificationForm button:hover{
           background: #9A2A2A;
         }
+         .notification{
+          display:flex;
+        }
+        .notification h3{
+          font-size: 0.9rem;
+          color: var(--primary);
+        }
+        tr{
+          display: flex;
+          justify-content: space-between;
+          gap:30px;
+        }
+        th{
+          color:#555;
+        }
