@@ -518,6 +518,32 @@ app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
     });
 });
 
+// ===== Add Notification =====
+app.post('/admin/add-notification', (req, res) => {
+  const { title, description, link } = req.body;
+  db.query('INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)', [title, description, link], (err) => {
+    if (err) return res.status(500).send('Database error');
+    res.send('Notification added');
+  });
+});
+
+// ===== Fetch Notifications =====
+app.get('/api/notifications', (req, res) => {
+  db.query('SELECT * FROM notifications ORDER BY created_at DESC', (err, results) => {
+    if (err) return res.status(500).send('Database error');
+    res.json(results);
+  });
+});
+
+// ===== Delete Notification =====
+app.delete('/admin/delete-notification/:id', (req, res) => {
+  db.query('DELETE FROM notifications WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).send('Database error');
+    res.send('Notification deleted');
+  });
+});
+
+
 // Result endpoints
 app.post('/check-result', async (req, res) => {
   const { name, dob, roll_no } = req.body;
