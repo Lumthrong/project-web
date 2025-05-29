@@ -103,6 +103,7 @@
   background-color: #fcecec; /* soft pink background */
   color: #a94442;            /* soft red text */
   padding: 1rem 1.5rem;
+    display:flex;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
