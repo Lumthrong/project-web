@@ -83,17 +83,21 @@ async function uploadCSV() {
 
 // Show Logout Button inside adminControls
 function showLogoutButton() {
-    const adminControls = document.getElementById('adminControls');
+  // Navbar items you created in the header
+  const authItem   = document.getElementById('authItem');   // “Login”
+  const logoutItem = document.getElementById('logoutItem'); // “Logout”
 
-    if (!document.getElementById('logoutBtn')) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.id = 'logoutBtn';
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.className = 'btn logout-btn';
-        logoutBtn.style.marginTop = '10px';
-        logoutBtn.addEventListener('click', adminLogout);
-        adminControls.appendChild(logoutBtn);
-    }
+  /* 1. Hide the normal Login link
+     2. Reveal the existing <li id="logoutItem">… */
+  if (authItem)   authItem.style.display   = 'none';
+  if (logoutItem) logoutItem.style.display = 'block';
+
+  /* 3. Add the click-handler to its <a id="logoutBtn"> only **once** */
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn && !logoutBtn.dataset.listener) {      // prevent double binding
+    logoutBtn.addEventListener('click', adminLogout);
+    logoutBtn.dataset.listener = 'true';
+  }
 }
 // Logout
 async function adminLogout(e) {
