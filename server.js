@@ -518,53 +518,6 @@ app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
     });
 });
 
-// ===== Add Notification =====
-app.post('/admin/add-notification', async (req, res) => {
-  const { title, description, link } = req.body;
-  try {
-    await pool.query(
-      'INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)',
-      [title, description, link]
-    );
-    res.send('Notification added');
-  } catch (err) {
-    console.error('Add notification error:', err);
-    res.status(500).send('Database error');
-  }
-});
-// middleware/auth.js
-
-function requireAdmin(req, res, next) {
-  if (req.session && req.session.admin) {
-    next();
-  } else {
-    res.status(401).json({ message: 'Unauthorized' });
-  }
-}
-
-module.exports = requireAdmin;
-// ===== Fetch Notifications =====
-app.get('/notifications', async (req, res) => {
-  try {
-    const [results] = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC');
-    res.json(results);
-  } catch (err) {
-    console.error('Error fetching notifications:', err);
-    res.status(500).json({ message: 'Database error' });
-  }
-});
-
-
-// ===== Delete Notification =====
-app.delete('/admin/delete-notification/:id', async (req, res) => {
-  try {
-    await pool.query('DELETE FROM notifications WHERE id = ?', [req.params.id]);
-    res.send('Notification deleted');
-  } catch (err) {
-    console.error('Error deleting notification:', err);
-    res.status(500).send('Database error');
-  }
-});
 
 
 
