@@ -1,1 +1,193 @@
+:root {
+            --primary: #2c3e50;
+            --secondary: #7B1818;
+            --light: #ecf0f1;
+            --success: #27ae60;
+            --danger: #e74c3c;
+        }
 
+        .result-system-container {
+            max-width: 1200px;
+            display: flex;
+            justify-content: center;
+        }
+        .result-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .result-card h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary);
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #9A2A2A;
+        }
+
+        .dob-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .result-table th, 
+        .result-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .result-table th {
+            background: var(--primary);
+            color: white;
+        }
+
+        .result-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .hidden {
+            display: none;
+        }
+        .text-center {
+            text-align: center;
+        }
+
+        .link {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+        h2{
+        margin-top: 0.25rem;
+        }
+        #addNotificationForm{
+          border-radius: 6px;
+          display: flex;
+          flex-direction: column;
+          color: #555;
+          font-weight: bold;
+          font-size:1.0rem;
+          gap: 1.25rem;
+        }
+        #addNotificationForm textarea{
+          padding:10px;
+          height:180px;
+          font-family: Sans-Serif;
+        }
+        #addNotificationForm input{
+          padding: 0.75rem;
+        }
+        #addNotificationForm button{
+          background: var(--secondary);
+          color:white;
+          border:none;
+          padding:10px;
+          border-radius: 6px;
+        }
+        #addNotificationForm button:hover{
+          background: #9A2A2A;
+        }
+         .notification{
+          display:flex;
+        }
+        .notification h3{
+          font-size: 1.5rem;
+          color: var(--primary);
+        }
+         tr{
+          display: flex;
+          flex-direction:column;
+          justify-content: space-between;
+          padding:10px;
+          border-radius:6px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom:20px;
+        }
+td h1{
+            color: var(--secondary);
+            font-weight:bold;
+            font-size:1.2rem;
+}
+        td{
+          font-size:1.0rem;
+        }
+td a{
+            text-decoration:none;
+            color: var(--secondary);
+}
+td a:hover{
+            color: var(--danger);
