@@ -112,18 +112,6 @@ async function adminLogout(e) {
         alert('Logout failed. Please try again.');
     }
 }
-// middleware/auth.js
-
-function requireAdmin(req, res, next) {
-  if (req.session && req.session.admin) {
-    next();
-  } else {
-    res.status(401).json({ message: 'Unauthorized' });
-  }
-}
-
-module.exports = requireAdmin;
-
 // Session check on page load
 async function checkAdminSession() {
     try {
