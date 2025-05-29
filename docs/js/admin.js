@@ -81,20 +81,6 @@ async function uploadCSV() {
     }
 }
 
-// Logout
-async function adminLogout(e) {
-    e.preventDefault();
-    try {
-        await fetch('https://project-web-toio.onrender.com/admin-logout', {
-            method: 'POST',
-            credentials: 'include'
-        });
-        window.location.reload();
-    } catch {
-        alert('Logout failed. Please try again.');
-    }
-}
-
 // Show Logout Button inside adminControls
 function showLogoutButton() {
     const adminControls = document.getElementById('adminControls');
@@ -107,6 +93,19 @@ function showLogoutButton() {
         logoutBtn.style.marginTop = '10px';
         logoutBtn.addEventListener('click', adminLogout);
         adminControls.appendChild(logoutBtn);
+    }
+}
+// Logout
+async function adminLogout(e) {
+    e.preventDefault();
+    try {
+        await fetch('https://project-web-toio.onrender.com/admin-logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        window.location.reload();
+    } catch {
+        alert('Logout failed. Please try again.');
     }
 }
 
@@ -127,6 +126,7 @@ async function checkAdminSession() {
             msg.classList.remove('hidden');
 
             showLogoutButton();
+            loadNotifications();
         }
     } catch (err) {
         console.error("Session check failed", err);
