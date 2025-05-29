@@ -137,5 +137,91 @@ async function checkAdminSession() {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
     document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+    document.getElementById('addNotificationForm')?.addEventListener('submit', addNotification);
     checkAdminSession();
 });
+// Add Notification
+async function addNotification(e) {
+    e.preventDefault();
+    const title = document.getElementById('notifTitle').value;
+    const description = document.getElementById('notifDesc').value;
+    const link = document.getElementById('notifLink').value;
+    const message = document.getElementById('notifMessage');
+
+    try {
+        const response = await fetch('https://project-web-toio.onrender.com/admin/add-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ title, description, link })
+        });
+
+        if (response.ok) {
+            message.textContent = 'Notification added successfully!';
+            message.className = 'message success';
+            document.getElementById('addNotificationForm').reset();
+            loadNotifications();
+        } else {
+            message.textContent = 'Failed to add notification.';
+            message.className = 'message error';
+        }
+    } catch (err) {
+        message.textContent = 'Error occurred while adding notification.';
+        message.className = 'message error';
+    }
+
+    message.classList.remove('hidden');
+}
+
+// Load All Notifications
+async function loadNotifications() {
+    try {
+        const res = await fetch('https://project-web-toio.onrender.com/api/notifications', {
+            credentials: 'include'
+        });
+        const notifications = await res.json();
+        const tableBody = document.querySelector('#notificationTable tbody');
+        tableBody.innerHTML = '';
+
+        notifications.forEach(n => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${n.title}</td>
+                <td>${n.description}</td>
+                <td>${n.link ? `<a href="${n.link}" target="_blank">Link</a>` : '—'}</td>
+                <td><button class="delete-btn" data-id="${n.id}">Delete</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Attach delete listeners
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this notification?')) {
+                    await deleteNotification(id);
+                }
+            });
+        });
+    } catch (err) {
+        console.error("Failed to load notifications", err);
+    }
+}
+
+// Delete Notification
+async function deleteNotification(id) {
+    try {
+        const res = await fetch(`https://project-web-toio.onrender.com/admin/delete-notification/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        if (res.ok) {
+            loadNotifications();
+        } else {
+            alert('Failed to delete notification');
+        }
+    } catch (err) {
+        alert('Error while deleting notification');
+    }
+}
