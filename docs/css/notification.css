@@ -128,9 +128,12 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
 }
-
-.notification-item:hover {
+.notification-item h3{
+    color: #9A2A2A;
+}
+.notification-item h3:hover {
   transform: scale(1.01);
+  color: #f39c12;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
