@@ -137,54 +137,54 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAdminSession();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const notificationList = document.getElementById('notificationList');
+    document.addEventListener('DOMContentLoaded', () => {
+  const notificationTableBody = document.querySelector('#notificationTable tbody');
   const addForm = document.getElementById('addNotificationForm');
 
-  // Fetch and display all notifications
+  // Load existing notifications
   async function loadNotifications() {
     try {
       const res = await fetch('/notifications');
       const data = await res.json();
 
-      notificationList.innerHTML = ''; // Clear existing list
+      notificationTableBody.innerHTML = ''; // Clear old rows
 
       data.forEach(notification => {
-        const item = document.createElement('li');
-        item.innerHTML = `
-          <h4>${notification.title}</h4>
-          <p>${notification.description}</p>
-          ${notification.link ? `<a href="${notification.link}" target="_blank">Read more</a>` : ''}
-          <small>${new Date(notification.created_at).toLocaleString()}</small>
-          <button data-id="${notification.id}" class="delete-btn">🗑️</button>
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${notification.title}</td>
+          <td>${notification.description}</td>
+          <td>${notification.link ? `<a href="${notification.link}" target="_blank">Link</a>` : '—'}</td>
+          <td><button class="delete-btn" data-id="${notification.id}">🗑️ Delete</button></td>
         `;
-        notificationList.appendChild(item);
+        notificationTableBody.appendChild(row);
       });
 
-      // Attach delete handlers
-      document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-          const id = button.getAttribute('data-id');
+      // Add delete handlers
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
           if (confirm('Are you sure you want to delete this notification?')) {
             await fetch(`/delete-notification/${id}`, { method: 'DELETE' });
-            loadNotifications(); // Refresh list
+            loadNotifications(); // Refresh
           }
         });
       });
     } catch (err) {
-      console.error('Failed to load notifications:', err);
+      console.error('Error loading notifications:', err);
     }
   }
 
-  // Handle add notification form
+  // Add new notification
   addForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const title = addForm.title.value.trim();
     const description = addForm.description.value.trim();
     const link = addForm.link.value.trim();
 
     if (!title || !description) {
-      alert('Title and description are required.');
+      alert('Please fill in title and description.');
       return;
     }
 
@@ -195,14 +195,15 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ title, description, link })
       });
       addForm.reset();
-      loadNotifications(); // Refresh list
+      loadNotifications();
     } catch (err) {
-      console.error('Failed to add notification:', err);
+      console.error('Error adding notification:', err);
     }
   });
 
   // Initial load
   loadNotifications();
 });
+    
 
 
