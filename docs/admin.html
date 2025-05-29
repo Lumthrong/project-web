@@ -1,5 +1,6 @@
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="css/mediaquery.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
+
 <body>
   <!-- Header -->
   <header class="header">
@@ -31,71 +33,72 @@
     </div>
   </header>
   <main>
-        <div class="result-system-container">
-                   <!-- Admin Section -->
-            <div class="result-card">
-                <h2><i class="fas fa-lock"></i> Admin Login</h2>
-                <form id="adminLoginForm">
-                    <div class="form-group">
-                        <label for="adminUsername">Username</label>
-                        <input type="text" id="adminUsername" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminPassword">Password</label>
-                        <input type="password" id="adminPassword" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn">Login</button>
-                    <div id="adminMessage" class="message hidden"></div>
-                </form>
+    <div class="result-system-container">
+      <!-- Admin Section -->
+      <div class="result-card">
+        <h2><i class="fas fa-lock"></i> Admin Login</h2>
+        <form id="adminLoginForm">
+          <div class="form-group">
+            <label for="adminUsername">Username</label>
+            <input type="text" id="adminUsername" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="adminPassword">Password</label>
+            <input type="password" id="adminPassword" class="form-control" required>
+          </div>
+          <button type="submit" class="btn">Login</button>
+          <div id="adminMessage" class="message hidden"></div>
+        </form>
 
-                <div id="adminControls" class="hidden">
-  <h2><i class="fas fa-upload"></i> Upload Results</h2>
-  <div class="form-group">
-    <label for="csvFile">Select CSV File</label>
-    <input type="file" id="csvFile" class="form-control" accept=".csv">
-  </div>
-  <button id="uploadCsvBtn" class="btn">Upload Results</button>
-  <div id="csvMessage" class="message hidden"></div>
-                
-  <hr>
+        <div id="adminControls" class="hidden">
+          <h2><i class="fas fa-upload"></i> Upload Results</h2>
+          <div class="form-group">
+            <label for="csvFile">Select CSV File</label>
+            <input type="file" id="csvFile" class="form-control" accept=".csv">
+          </div>
+          <button id="uploadCsvBtn" class="btn">Upload Results</button>
+          <div id="csvMessage" class="message hidden"></div>
 
-  <h2><i class="fas fa-bullhorn"></i> Manage Notifications</h2>
+          <hr>
 
-  <!-- Add Notification Form -->
-  <form id="addNotificationForm">
-    <div class="form-group">
-      <label for="notifTitle">Title</label>
-      <input type="text" id="notifTitle" class="form-control" required>
-    </div>
-    <div class="form-group">
-      <label for="notifDesc">Description</label>
-      <textarea id="notifDesc" class="form-control" rows="3" required></textarea>
-    </div>
-    <div class="form-group">
-      <label for="notifLink">Link (optional)</label>
-      <input type="url" id="notifLink" class="form-control">
-    </div>
-    <button type="submit" class="btn">Add Notification</button>
-    <div id="notifMessage" class="message hidden"></div>
-  </form>
-              <h3 style="margin-top: 30px;">Existing Notifications</h3>
-  <table id="notificationTable" class="notification-table">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Description</th>
-        <th>Link</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Will be filled dynamically -->
-    </tbody>
-  </table>
-                      </div>
+          <h2><i class="fas fa-bullhorn"></i> Manage Notifications</h2>
+
+          <!-- Add Notification Form -->
+          <form id="addNotificationForm">
+            <div class="form-group">
+              <label for="notifTitle">Title</label>
+              <input type="text" id="notifTitle" class="form-control" required>
             </div>
- </main>
-     <!-- Footer -->
+            <div class="form-group">
+              <label for="notifDesc">Description</label>
+              <textarea id="notifDesc" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="notifLink">Link (optional)</label>
+              <input type="url" id="notifLink" class="form-control">
+            </div>
+            <button type="submit" class="btn">Add Notification</button>
+            <div id="notifMessage" class="message hidden"></div>
+          </form>
+          <h3 style="margin-top: 30px;">Existing Notifications</h3>
+          <table id="notificationTable" class="notification-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Link</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Will be filled dynamically -->
+            </tbody>
+          </table>
+          <li id="logoutItem" style="display: none;"><a id="logoutBtn" href="#">Logout</a></li>
+        </div>
+      </div>
+  </main>
+  <!-- Footer -->
   <footer>
     <div class="footer-links">
       <h1>Quick Links</h1>
@@ -116,8 +119,9 @@
     <p>2025 Little Flower Higher Secondary School. All rights reserved.</p>
   </footer>
 
-    <script src="js/admin.js"></script>
-    <script src="js/script.js"></script>
-    <script src="js/loginsignup.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/script.js"></script>
+  <script src="js/loginsignup.js"></script>
 </body>
+
 </html>
