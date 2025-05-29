@@ -56,7 +56,7 @@
             <label for="csvFile">Select CSV File</label>
             <input type="file" id="csvFile" class="form-control" accept=".csv">
           </div>
-          <button id="uploadCsvBtn" class="btn">Upload Results</button>
+          <button id="uploadCsvBtn" class="btn">Upload</button>
           <div id="csvMessage" class="message hidden"></div>
 
           <hr>
@@ -65,14 +65,17 @@
 
           <!-- Add Notification Form -->
           <form id="addNotificationForm">
-  <input type="text" name="title" placeholder="Title" required />
-  <textarea name="description" placeholder="Description" required></textarea>
-  <input type="url" name="link" placeholder="Optional Link" />
-  <button type="submit">Add Notification</button>
-</form>
+            <p>Notification Title</p>
+            <input type="text" name="title" placeholder="Title" class="form-control" require/>
+            <p>Description</p>
+            <textarea name="description" placeholder="Description" class="form-control" required>
+            </textarea>
+            <p>Document Link</p>
+            <input type="url" name="link" placeholder="Optional Link" class="form-control"/>
+            <button type="submit">Push Notification</button>
+          </form>
 
-<ul id="notificationList"></ul>
-
+        <ul id="notificationList"></ul>
           <h3 style="margin-top: 30px;">Existing Notifications</h3>
           <table id="notificationTable" class="notification-table">
             <thead>
@@ -87,7 +90,6 @@
               <!-- Will be filled dynamically -->
             </tbody>
           </table>
-          <li id="logoutItem" style="display: none;"><a id="logoutBtn" href="#">Logout</a></li>
         </div>
       </div>
   </main>
@@ -112,7 +114,7 @@
     <p>2025 Little Flower Higher Secondary School. All rights reserved.</p>
   </footer>
 
-  <script src="js/admin.js"></script>
+  <script src="js/admin1.js"></script>
   <script src="js/script.js"></script>
   <script src="js/loginsignup.js"></script>
 </body>
