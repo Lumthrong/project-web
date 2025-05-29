@@ -13,7 +13,11 @@
 }
 
 /* === Section1 Styling === */
-
+.section1{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
 .section1 h1 {
     color: #9A2A2A;
     margin-bottom: 25px;
