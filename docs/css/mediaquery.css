@@ -1059,10 +1059,10 @@
   }
 
   .protected-section p {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
     border-bottom: 1px dashed #ccc;
-    padding: 8px 0;
+    padding: 10px;
     margin-bottom: 15px;
   }
 
