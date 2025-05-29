@@ -38,6 +38,9 @@
     flex-direction: column;
     gap: 20px;
 }
+.title p{
+    color: grey;
+}
 .title a {
     text-decoration: none;
     color: #9A2A2A;
