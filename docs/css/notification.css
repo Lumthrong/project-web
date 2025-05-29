@@ -102,7 +102,6 @@
 .notification-item {
   background-color: #fcecec; /* soft pink background */
   color: #a94442;            /* soft red text */
-  font-weight: bold;
   padding: 1rem 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -114,7 +113,7 @@
     font-size: 16px;
 }
 . notification-item p{
-    color: #777;
+    color: #grey;
         }
 /* === Animation === */
 @keyframes slideUp {
