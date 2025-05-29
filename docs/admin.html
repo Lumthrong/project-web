@@ -65,21 +65,14 @@
 
           <!-- Add Notification Form -->
           <form id="addNotificationForm">
-            <div class="form-group">
-              <label for="notifTitle">Title</label>
-              <input type="text" id="notifTitle" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label for="notifDesc">Description</label>
-              <textarea id="notifDesc" class="form-control" rows="3" required></textarea>
-            </div>
-            <div class="form-group">
-              <label for="notifLink">Link (optional)</label>
-              <input type="url" id="notifLink" class="form-control">
-            </div>
-            <button type="submit" class="btn">Add Notification</button>
-            <div id="notifMessage" class="message hidden"></div>
-          </form>
+  <input type="text" name="title" placeholder="Title" required />
+  <textarea name="description" placeholder="Description" required></textarea>
+  <input type="url" name="link" placeholder="Optional Link" />
+  <button type="submit">Add Notification</button>
+</form>
+
+<ul id="notificationList"></ul>
+
           <h3 style="margin-top: 30px;">Existing Notifications</h3>
           <table id="notificationTable" class="notification-table">
             <thead>
