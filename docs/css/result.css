@@ -167,6 +167,9 @@
           font-size: 1.0rem;
           color: var(--primary);
         }
+th{
+            color:#555;
+}
         td{
           display: flex;
           flex-direction:column;
