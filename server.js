@@ -520,44 +520,37 @@ app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
 // Get all notifications
 app.get('/notifications', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC');
+    const [rows] = await pool.execute('SELECT * FROM notifications ORDER BY created_at DESC');
     res.json(rows);
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    res.status(500).json({ error: 'Failed to fetch notifications' });
+  } catch (err) {
+    console.error('Error loading notifications:', err);
+    res.status(500).send('Error loading notifications');
   }
 });
-
 // Add new notification
 app.post('/add-notification', async (req, res) => {
   const { title, description, link } = req.body;
-  if (!title || !description) {
-    return res.status(400).json({ error: 'Title and description are required' });
-  }
-
   try {
-    await pool.query('INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)', [
-      title,
-      description,
-      link || null
-    ]);
-    res.json({ status: 'success', message: 'Notification added successfully' });
-  } catch (error) {
-    console.error('Error adding notification:', error);
-    res.status(500).json({ error: 'Failed to add notification' });
+    await pool.execute(
+      'INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)',
+      [title, description, link || null]
+    );
+    res.status(201).send('Notification added');
+  } catch (err) {
+    console.error('Error adding notification:', err);
+    res.status(500).send('Error adding notification');
   }
 });
 
 // Delete a notification
 app.delete('/delete-notification/:id', async (req, res) => {
-  const { id } = req.params;
-
+  const id = req.params.id;
   try {
-    await pool.query('DELETE FROM notifications WHERE id = ?', [id]);
-    res.json({ status: 'success', message: 'Notification deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting notification:', error);
-    res.status(500).json({ error: 'Failed to delete notification' });
+    await pool.execute('DELETE FROM notifications WHERE id = ?', [id]);
+    res.status(200).send('Notification deleted');
+  } catch (err) {
+    console.error('Error deleting notification:', err);
+    res.status(500).send('Error deleting notification');
   }
 });
 
