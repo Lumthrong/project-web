@@ -56,7 +56,7 @@ function showLogoutButton() {
 async function adminLogout(e) {
   e.preventDefault();
   try {
-    await fetch('/admin-logout', {
+    await fetch('https://project-web-toio.onrender.com/admin-logout', {
       method: 'POST',
       credentials: 'include',
     });
@@ -68,7 +68,7 @@ async function adminLogout(e) {
 // Check admin session on page load
 async function checkAdminSession() {
   try {
-    const res = await fetch('/check-admin-session', { credentials: 'include' });
+    const res = await fetch('https://project-web-toio.onrender.com/check-admin-session', { credentials: 'include' });
     const data = await res.json();
     if (data.loggedIn) {
       document.getElementById('adminControls').classList.remove('hidden');
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load existing notifications
   async function loadNotifications() {
     try {
-      const res = await fetch('/notifications');
+      const res = await fetch('https://project-web-toio.onrender.com/notifications');
       const data = await res.json();
 
       notificationTableBody.innerHTML = ''; // Clear old rows
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async () => {
           const id = btn.getAttribute('data-id');
           if (confirm('Are you sure you want to delete this notification?')) {
-            await fetch(`/delete-notification/${id}`, { method: 'DELETE' });
+            await fetch(`https://project-web-toio.onrender.com/delete-notification/${id}`, { method: 'DELETE' });
             loadNotifications(); // Refresh
           }
         });
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      await fetch('/add-notification', {
+      await fetch('https://project-web-toio.onrender.com/add-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description, link })
