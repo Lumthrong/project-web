@@ -519,29 +519,43 @@ app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
 });
 
 // ===== Add Notification =====
-app.post('/admin/add-notification', (req, res) => {
+app.post('/admin/add-notification', async (req, res) => {
   const { title, description, link } = req.body;
-  pool.query('INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)', [title, description, link], (err) => {
-    if (err) return res.status(500).send('Database error');
+  try {
+    await pool.query(
+      'INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)',
+      [title, description, link]
+    );
     res.send('Notification added');
-  });
+  } catch (err) {
+    console.error('Add notification error:', err);
+    res.status(500).send('Database error');
+  }
 });
 
 // ===== Fetch Notifications =====
-app.get('/api/notifications', (req, res) => {
-  pool.query('SELECT * FROM notifications ORDER BY created_at DESC', (err, results) => {
-    if (err) return res.status(500).send('Database error');
+app.get('/notifications', async (req, res) => {
+  try {
+    const [results] = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC');
     res.json(results);
-  });
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    res.status(500).json({ message: 'Database error' });
+  }
 });
 
+
 // ===== Delete Notification =====
-app.delete('/admin/delete-notification/:id', (req, res) => {
-  pool.query('DELETE FROM notifications WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).send('Database error');
+app.delete('/admin/delete-notification/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM notifications WHERE id = ?', [req.params.id]);
     res.send('Notification deleted');
-  });
+  } catch (err) {
+    console.error('Error deleting notification:', err);
+    res.status(500).send('Database error');
+  }
 });
+
 
 
 // Result endpoints
