@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       data.forEach(notification => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${notification.title}</td>
+          <td><h1>${notification.title}</h1></td>
           <td>${notification.description}</td>
           <td>${notification.link ? `<a href="${notification.link}" target="_blank">Link</a>` : '—'}</td>
           <td><button class="delete-btn" data-id="${notification.id}">🗑️ Delete</button></td>
