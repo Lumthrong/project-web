@@ -1,7 +1,6 @@
 /* === Container and Section === */
 
 .Notice {
-
     padding: 40px;
     font-size: 16px;
     background: #fff;
@@ -15,7 +14,6 @@
 }
 /* === Section1 Styling === */
 .section1 h1 {
-
     color: #9A2A2A;
     margin-bottom: 25px;
     font-size: 2rem;
@@ -111,6 +109,7 @@
   flex-direction: column;
   margin-bottom: 20px;
   padding: 1rem;
+gap:20px;
 }
 .notification-item {
   background-color: #fcecec; /* soft pink background */
