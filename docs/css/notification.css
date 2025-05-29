@@ -1,5 +1,7 @@
 /* === Container and Section === */
+
 .Notice {
+
     padding: 40px;
     font-size: 16px;
     background: #fff;
@@ -11,21 +13,15 @@
     display: flex;
     justify-content: center;
 }
-
 /* === Section1 Styling === */
-.section1{
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-}
 .section1 h1 {
+
     color: #9A2A2A;
     margin-bottom: 25px;
     font-size: 2rem;
     text-align: center;
     position: relative;
 }
-
 .section1 h1::after {
     content: '';
     display: block;
@@ -35,22 +31,32 @@
     margin: 10px auto 0;
     border-radius: 3px;
 }
-
 /* === Title Section === */
 .title {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
-.title p{
-    color: grey;
+.title p {
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 0;
+    background: #fdf1f1;
+    color: #555;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(154, 42, 42, 0.05);
+    animation: slideUp 0.6s ease forwards;
+    opacity: 0;
+}
+.title p:hover {
+    background: #f9dede;
+    transform: translateX(5px);
 }
 .title a {
     text-decoration: none;
     color: #9A2A2A;
     font-weight: 600;
 }
-
 .title a:hover {
     color: #f39c12;
 }
