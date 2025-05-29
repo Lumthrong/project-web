@@ -137,101 +137,72 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAdminSession();
 });
 
-// Load notifications into table
-async function loadNotifications() {
-  const tableBody = document.querySelector('#notificationTable tbody');
-  tableBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+document.addEventListener('DOMContentLoaded', () => {
+  const notificationList = document.getElementById('notificationList');
+  const addForm = document.getElementById('addNotificationForm');
 
-  try {
-    const res = await fetch('https://project-web-toio.onrender.com/notifications', { credentials: 'include' });
-    const notifications = await res.json();
+  // Fetch and display all notifications
+  async function loadNotifications() {
+    try {
+      const res = await fetch('/notifications');
+      const data = await res.json();
 
-    if (!notifications.length) {
-      tableBody.innerHTML = '<tr><td colspan="4">No notifications found.</td></tr>';
+      notificationList.innerHTML = ''; // Clear existing list
+
+      data.forEach(notification => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <h4>${notification.title}</h4>
+          <p>${notification.description}</p>
+          ${notification.link ? `<a href="${notification.link}" target="_blank">Read more</a>` : ''}
+          <small>${new Date(notification.created_at).toLocaleString()}</small>
+          <button data-id="${notification.id}" class="delete-btn">🗑️</button>
+        `;
+        notificationList.appendChild(item);
+      });
+
+      // Attach delete handlers
+      document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+          const id = button.getAttribute('data-id');
+          if (confirm('Are you sure you want to delete this notification?')) {
+            await fetch(`/delete-notification/${id}`, { method: 'DELETE' });
+            loadNotifications(); // Refresh list
+          }
+        });
+      });
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+    }
+  }
+
+  // Handle add notification form
+  addForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = addForm.title.value.trim();
+    const description = addForm.description.value.trim();
+    const link = addForm.link.value.trim();
+
+    if (!title || !description) {
+      alert('Title and description are required.');
       return;
     }
 
-    tableBody.innerHTML = notifications.map(notif => `
-      <tr>
-        <td>${escapeHtml(notif.title)}</td>
-        <td>${escapeHtml(notif.description)}</td>
-        <td>${notif.link ? `<a href="${escapeHtml(notif.link)}" target="_blank">Link</a>` : ''}</td>
-        <td><button class="deleteBtn" data-id="${notif.id}">Delete</button></td>
-      </tr>
-    `).join('');
-
-    // Add delete button event listeners
-    document.querySelectorAll('.deleteBtn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!confirm('Delete this notification?')) return;
-        const id = btn.dataset.id;
-        try {
-          const res = await fetch(`https://project-web-toio.onrender.com/admin/notifications/${id}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-          if (res.ok) {
-            loadNotifications();
-          } else {
-            alert('Failed to delete notification.');
-          }
-        } catch {
-          alert('Error deleting notification.');
-        }
+    try {
+      await fetch('/add-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, link })
       });
-    });
-
-  } catch (error) {
-    tableBody.innerHTML = '<tr><td colspan="4">Failed to load notifications.</td></tr>';
-  }
-}
-
-// Add notification form handler
-document.getElementById('addNotificationForm')?.addEventListener('submit', async e => {
-  e.preventDefault();
-
-  const title = document.getElementById('notifTitle').value.trim();
-  const description = document.getElementById('notifDesc').value.trim();
-  const link = document.getElementById('notifLink').value.trim();
-  const msg = document.getElementById('notifMessage');
-
-  if (!title || !description) {
-    msg.textContent = 'Title and description are required.';
-    msg.className = 'message error';
-    msg.classList.remove('hidden');
-    return;
-  }
-
-  try {
-    const res = await fetch('https://project-web-toio.onrender.com/admin/notifications', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      credentials: 'include',
-      body: JSON.stringify({ title, description, link })
-    });
-    const data = await res.json();
-
-    if (data.status === 'success') {
-      msg.textContent = 'Notification added!';
-      msg.className = 'message success';
-      document.getElementById('addNotificationForm').reset();
-      loadNotifications();
-    } else {
-      msg.textContent = data.error || 'Failed to add notification.';
-      msg.className = 'message error';
+      addForm.reset();
+      loadNotifications(); // Refresh list
+    } catch (err) {
+      console.error('Failed to add notification:', err);
     }
-  } catch {
-    msg.textContent = 'Error adding notification.';
-    msg.className = 'message error';
-  }
-  msg.classList.remove('hidden');
-});
-
-// Utility to escape HTML
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, function(m) {
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
   });
-}
+
+  // Initial load
+  loadNotifications();
+});
 
 
