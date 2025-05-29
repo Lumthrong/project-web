@@ -140,6 +140,7 @@
           flex-direction: column;
           color: #555;
           font-weight: bold;
+          font-size:1.0rem;
           gap: 1.25rem;
         }
         #addNotificationForm textarea{
@@ -181,7 +182,7 @@ td .title{
             font-weight:bold;
 }
         td{
-          font-size:1.2rem;
+          font-size:1.0rem;
         }
 td a{
             text-decoration:none;
