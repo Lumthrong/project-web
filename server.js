@@ -517,67 +517,48 @@ app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
     });
 });
 
-// Helper to read notifications
-function readNotifications() {
-  if (!fs.existsSync(notificationsFile)) return [];
-  const data = fs.readFileSync(notificationsFile, 'utf8');
+// Get all notifications
+app.get('/notifications', async (req, res) => {
   try {
-    return JSON.parse(data);
-  } catch {
-    return [];
+    const [rows] = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
   }
-}
-
-// Helper to write notifications
-function writeNotifications(notifs) {
-  fs.writeFileSync(notificationsFile, JSON.stringify(notifs, null, 2));
-}
-
-// Get all notifications (public)
-app.get('/notifications', (req, res) => {
-  const notifications = readNotifications();
-  res.json(notifications);
 });
 
-// Add a notification (admin only)
-app.post('/admin/notifications', (req, res) => {
-  if (!req.session || !req.session.adminLoggedIn) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
+// Add new notification
+app.post('/add-notification', async (req, res) => {
   const { title, description, link } = req.body;
   if (!title || !description) {
     return res.status(400).json({ error: 'Title and description are required' });
   }
 
-  const notifications = readNotifications();
-  const newNotification = {
-    id: Date.now(), // simple unique ID
-    title,
-    description,
-    link: link || ''
-  };
-  notifications.push(newNotification);
-  writeNotifications(notifications);
-
-  res.json({ status: 'success', notification: newNotification });
+  try {
+    await pool.query('INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)', [
+      title,
+      description,
+      link || null
+    ]);
+    res.json({ status: 'success', message: 'Notification added successfully' });
+  } catch (error) {
+    console.error('Error adding notification:', error);
+    res.status(500).json({ error: 'Failed to add notification' });
+  }
 });
 
-// Delete a notification by id (admin only)
-app.delete('/admin/notifications/:id', (req, res) => {
-  if (!req.session || !req.session.adminLoggedIn) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+// Delete a notification
+app.delete('/delete-notification/:id', async (req, res) => {
+  const { id } = req.params;
 
-  const notifId = Number(req.params.id);
-  let notifications = readNotifications();
-  const initialLen = notifications.length;
-  notifications = notifications.filter(n => n.id !== notifId);
-  if (notifications.length === initialLen) {
-    return res.status(404).json({ error: 'Notification not found' });
+  try {
+    await pool.query('DELETE FROM notifications WHERE id = ?', [id]);
+    res.json({ status: 'success', message: 'Notification deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ error: 'Failed to delete notification' });
   }
-  writeNotifications(notifications);
-  res.json({ status: 'success' });
 });
 
 // Result endpoints
