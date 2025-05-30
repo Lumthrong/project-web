@@ -572,21 +572,25 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
   }
 });
 // Delete a notification
+// Update delete endpoint to use correct path
 app.delete('/delete-notification/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    // First get the notification to check for document
     const [notification] = await pool.execute('SELECT document_path FROM notifications WHERE id = ?', [id]);
     
-    // Delete the file if exists
     if (notification[0] && notification[0].document_path) {
-      const filePath = path.join(__dirname, notification[0].document_path);
+      // Extract filename from stored path
+      const filename = notification[0].document_path.split('/').pop();
+      const filePath = path.join(__dirname, 'docs', 'uploads', 'notifications', filename);
+      
+      // Delete file
       fs.unlink(filePath, (err) => {
-        if (err) console.error('Error deleting file:', err);
+        if (err && err.code !== 'ENOENT') { // Ignore "not found" errors
+          console.error('Error deleting file:', err);
+        }
       });
     }
 
-    // Then delete from database
     await pool.execute('DELETE FROM notifications WHERE id = ?', [id]);
     res.status(200).send('Notification deleted');
   } catch (err) {
