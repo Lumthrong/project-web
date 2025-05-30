@@ -528,35 +528,9 @@ app.get('/notifications', async (req, res) => {
   }
 });
 
-// Multer config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '_');
-    cb(null, uniqueName);
-  }
-});
 
-// Your new POST route with file upload
-app.post('/add-notification', upload.single('document'), async (req, res) => {
-  const { title, description } = req.body;
-  const documentPath = req.file ? `/uploads${req.file.filename}` : null;
 
-  if (!title || !description) {
-    return res.status(400).send('Title and description are required');
-  }
 
-  try {
-    await pool.execute(
-      'INSERT INTO notifications (title, description, link) VALUES (?, ?, ?)',
-      [title, description, documentPath]
-    );
-    res.status(201).send('Notification added');
-  } catch (err) {
-    console.error('Error adding notification:', err);
-    res.status(500).send('Error adding notification');
-  }
-});
 // Delete a notification
 app.delete('/delete-notification/:id', async (req, res) => {
   const id = req.params.id;
