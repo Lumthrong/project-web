@@ -22,7 +22,7 @@ const __dirname = dirname(__filename);
 // Configure multer storage for notifications
 const notificationStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const destPath = path.join(__dirname, 'public', 'uploads', 'notifications');
+    const destPath = path.join(__dirname, 'docs', 'uploads', 'notifications');
     fs.mkdir(destPath, { recursive: true })
       .then(() => cb(null, destPath))
       .catch(err => cb(err));
@@ -50,7 +50,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'docs')));
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'docs', 'uploads')));
 // MySQL connection pool
 // Adjust paths to your Aiven SSL certs or use environment variables
 const pool = mysql.createPool({
@@ -545,7 +545,6 @@ app.get('/notifications', async (req, res) => {
 });
 
 // Add notification with document
-app.post('/add-notification', docUpload.single('document'), async (req, res) => {
 app.post('/add-notification', docUpload.single('document'), async (req, res) => {
   const { title, description } = req.body;
   const file = req.file;
