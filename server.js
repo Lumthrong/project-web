@@ -19,16 +19,17 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Create uploads directory if not exists
-fs.mkdirSync('uploads', { recursive: true });
-
 // Configure multer storage for notifications
 const notificationStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/notifications/');
+    const destPath = path.join(__dirname, 'public', 'uploads', 'notifications');
+    fs.mkdir(destPath, { recursive: true })
+      .then(() => cb(null, destPath))
+      .catch(err => cb(err));
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
   }
 });
 
@@ -49,6 +50,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'docs')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 // MySQL connection pool
 // Adjust paths to your Aiven SSL certs or use environment variables
 const pool = mysql.createPool({
@@ -544,6 +546,7 @@ app.get('/notifications', async (req, res) => {
 
 // Add notification with document
 app.post('/add-notification', docUpload.single('document'), async (req, res) => {
+app.post('/add-notification', docUpload.single('document'), async (req, res) => {
   const { title, description } = req.body;
   const file = req.file;
 
@@ -554,7 +557,8 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
   try {
     let documentPath = null;
     if (file) {
-      documentPath = `/uploads/${file.filename}`;
+      // Store relative path
+      documentPath = `/uploads/notifications/${file.filename}`;
     }
 
     await pool.query(
@@ -568,7 +572,6 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
     res.status(500).send('Error adding notification');
   }
 });
-
 // Delete a notification
 app.delete('/delete-notification/:id', async (req, res) => {
   const id = req.params.id;
