@@ -527,10 +527,6 @@ app.get('/notifications', async (req, res) => {
     res.status(500).send('Error loading notifications');
   }
 });
-// Make sure upload directory exists
-const uploadDir = path.join(__dirname, 'uploads', 'notifications');
-fs.mkdirSync(uploadDir, { recursive: true });
-
 // Multer config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
@@ -544,7 +540,7 @@ const upload = multer({ storage });
 // Your new POST route with file upload
 app.post('/add-notification', upload.single('document'), async (req, res) => {
   const { title, description } = req.body;
-  const documentPath = req.file ? `/uploads/notifications/${req.file.filename}` : null;
+  const documentPath = req.file ? `/uploads${req.file.filename}` : null;
 
   if (!title || !description) {
     return res.status(400).send('Title and description are required');
