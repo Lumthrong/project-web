@@ -19,17 +19,21 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Configure multer storage
-const storage = multer.diskStorage({
+// Create uploads directory if not exists
+fs.mkdirSync('uploads/notifications', { recursive: true });
+
+// Configure multer storage for notifications
+const notificationStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, 'uploads/notifications/');
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
-const upload = multer({ storage });
+const upload = multer(); // For CSV uploads
+const docUpload = multer({ storage: notificationStorage }); // For notification documents
 
 const app = express();
 
@@ -538,8 +542,8 @@ app.get('/notifications', async (req, res) => {
   }
 });
 
-// Add notification endpoint (server.js)
-app.post('/add-notification', upload.single('document'), async (req, res) => {
+// Add notification with document
+app.post('/add-notification', docUpload.single('document'), async (req, res) => {
   const { title, description } = req.body;
   const file = req.file;
 
@@ -550,7 +554,7 @@ app.post('/add-notification', upload.single('document'), async (req, res) => {
   try {
     let documentPath = null;
     if (file) {
-      documentPath = `/uploads/${file.filename}`; // Store relative path
+      documentPath = `/uploads/notifications/${file.filename}`;
     }
 
     await pool.query(
@@ -565,11 +569,22 @@ app.post('/add-notification', upload.single('document'), async (req, res) => {
   }
 });
 
-
 // Delete a notification
 app.delete('/delete-notification/:id', async (req, res) => {
   const id = req.params.id;
   try {
+    // First get the notification to check for document
+    const [notification] = await pool.execute('SELECT document_path FROM notifications WHERE id = ?', [id]);
+    
+    // Delete the file if exists
+    if (notification[0] && notification[0].document_path) {
+      const filePath = path.join(__dirname, notification[0].document_path);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
+
+    // Then delete from database
     await pool.execute('DELETE FROM notifications WHERE id = ?', [id]);
     res.status(200).send('Notification deleted');
   } catch (err) {
