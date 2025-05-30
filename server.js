@@ -528,7 +528,32 @@ app.get('/notifications', async (req, res) => {
   }
 });
 
+// Add notification endpoint (server.js)
+app.post('/add-notification', upload.single('document'), async (req, res) => {
+  const { title, description } = req.body;
+  const file = req.file;
 
+  if (!title || !description) {
+    return res.status(400).send('Title and description are required');
+  }
+
+  try {
+    let documentPath = null;
+    if (file) {
+      documentPath = `/uploads/${file.filename}`; // Store relative path
+    }
+
+    await pool.query(
+      'INSERT INTO notifications (title, description, document_path) VALUES (?, ?, ?)',
+      [title, description, documentPath]
+    );
+
+    res.status(201).send('Notification added');
+  } catch (err) {
+    console.error('Error adding notification:', err);
+    res.status(500).send('Error adding notification');
+  }
+});
 
 
 // Delete a notification
