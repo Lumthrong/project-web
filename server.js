@@ -527,6 +527,7 @@ app.get('/notifications', async (req, res) => {
     res.status(500).send('Error loading notifications');
   }
 });
+
 // Multer config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
@@ -535,7 +536,6 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
-const upload = multer({ storage });
 
 // Your new POST route with file upload
 app.post('/add-notification', upload.single('document'), async (req, res) => {
