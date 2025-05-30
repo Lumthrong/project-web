@@ -130,86 +130,122 @@ async function uploadCSV() {
     }
 }
 
-// Event listeners setup
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
-    document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
-    checkAdminSession();
-});
-
-    document.addEventListener('DOMContentLoaded', () => {
-  const notificationTableBody = document.querySelector('#notificationTable tbody');
-  const addForm = document.getElementById('addNotificationForm');
-
-  // Load existing notifications
-  async function loadNotifications() {
-    try {
-      const res = await fetch('https://project-web-toio.onrender.com/notifications');
-      const data = await res.json();
-
-      notificationTableBody.innerHTML = ''; // Clear old rows
-
-      data.forEach(notification => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><h1>${notification.title}</h1></td>
-          <td>${notification.description}</td>
-          <td>${notification.link ? `<a href="${notification.link}" target="_blank">Link</a>` : '—'}</td>
-          <td><button class="delete-btn" data-id="${notification.id}">🗑️ Delete</button></td>
-        `;
-        notificationTableBody.appendChild(row);
-      });
-
-      // Add delete handlers
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
-          if (confirm('Are you sure you want to delete this notification?')) {
-            await fetch(`https://project-web-toio.onrender.com/delete-notification/${id}`, { method: 'DELETE' });
-            loadNotifications(); // Refresh
-          }
-        });
-      });
-    } catch (err) {
-      console.error('Error loading notifications:', err);
-    }
-  }
-
-const addForm = document.getElementById('addNotificationForm');
-
-// Add new notification
-addForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const formData = new FormData(addForm); // handles text + file upload
-
-  const title = formData.get('title').trim();
-  const description = formData.get('description').trim();
-
-  if (!title || !description) {
-    alert('Please fill in title and description.');
-    return;
-  }
-
+// Load notifications with document links
+async function loadNotifications() {
   try {
-    const res = await fetch('https://project-web-toio.onrender.com/add-notification', {
-      method: 'POST',
-      body: formData // no need to set headers for FormData
+    const res = await fetch('https://project-web-toio.onrender.com/notifications');
+    const data = await res.json();
+
+    const tbody = document.querySelector('#notificationTable tbody');
+    tbody.innerHTML = '';
+
+    data.forEach(notification => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${notification.title}</td>
+        <td>${notification.description}</td>
+        <td>${
+          notification.document_path 
+            ? `<a href="https://project-web-toio.onrender.com${notification.document_path}" target="_blank">View Document</a>` 
+            : 'No document'
+        }</td>
+        <td>
+          <button class="delete-btn" data-id="${notification.id}">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
     });
 
-    if (!res.ok) throw new Error(await res.text());
-
-    alert('Notification added successfully!');
-    addForm.reset();
-    loadNotifications(); // If you already have this function
+    // Add delete handlers
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (confirm('Are you sure you want to delete this notification?')) {
+          try {
+            const response = await fetch(`https://project-web-toio.onrender.com/delete-notification/${id}`, { 
+              method: 'DELETE',
+              credentials: 'include'
+            });
+            
+            if (response.ok) {
+              loadNotifications();
+            } else {
+              alert('Failed to delete notification');
+            }
+          } catch (err) {
+            console.error('Delete error:', err);
+            alert('Error deleting notification');
+          }
+        }
+      });
+    });
   } catch (err) {
-    console.error('Error adding notification:', err);
-    alert('Failed to add notification.');
+    console.error('Error loading notifications:', err);
+  }
+}
+
+// Add notification form handler
+document.addEventListener('DOMContentLoaded', () => {
+  // ... (Existing admin login and CSV event listeners)
+  
+  const addForm = document.getElementById('addNotificationForm');
+  if (addForm) {
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageElement = addForm.querySelector('.showMessage');
+      const formData = new FormData(addForm);
+      
+      try {
+        const response = await fetch('https://project-web-toio.onrender.com/add-notification', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          messageElement.textContent = 'Notification added successfully!';
+          messageElement.className = 'showMessage success';
+          addForm.reset();
+          loadNotifications();
+        } else {
+          messageElement.textContent = 'Failed to add notification';
+          messageElement.className = 'showMessage error';
+        }
+      } catch (err) {
+        console.error('Notification error:', err);
+        messageElement.textContent = 'Error adding notification';
+        messageElement.className = 'showMessage error';
+      }
+    });
   }
 });
 
-  // Initial load
-  loadNotifications();
+// Check admin session on load
+async function checkAdminSession() {
+  try {
+    const res = await fetch('https://project-web-toio.onrender.com/check-admin-session', { 
+      credentials: 'include' 
+    });
+    const data = await res.json();
+    
+    if (data.loggedIn) {
+      document.getElementById('adminControls').classList.remove('hidden');
+      document.getElementById('adminLoginForm').classList.add('hidden');
+      showLogoutButton();
+      loadNotifications();
+    }
+  } catch (err) {
+    console.error('Session check failed', err);
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
+  document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
+  checkAdminSession();
 });
     
 
