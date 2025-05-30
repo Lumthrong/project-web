@@ -175,26 +175,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  addForm.addEventListener('submit', async (e) => {
+const addForm = document.getElementById('addNotificationForm');
+
+// Add new notification
+addForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const formData = new FormData(addForm);
+  const formData = new FormData(addForm); // handles text + file upload
 
-  if (!formData.get('title') || !formData.get('description')) {
+  const title = formData.get('title').trim();
+  const description = formData.get('description').trim();
+
+  if (!title || !description) {
     alert('Please fill in title and description.');
     return;
   }
 
   try {
-    await fetch('https://project-web-toio.onrender.com/add-notification', {
+    const res = await fetch('https://project-web-toio.onrender.com/add-notification', {
       method: 'POST',
-      body: formData,
+      body: formData // no need to set headers for FormData
     });
 
+    if (!res.ok) throw new Error(await res.text());
+
+    alert('Notification added successfully!');
     addForm.reset();
-    loadNotifications();
+    loadNotifications(); // If you already have this function
   } catch (err) {
     console.error('Error adding notification:', err);
+    alert('Failed to add notification.');
   }
 });
 
