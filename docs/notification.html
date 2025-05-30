@@ -39,9 +39,16 @@
       <div class="Notice">
           <h1>Notification</h1>
           <div class="title"> 
-            <div id="notificationList">
-              Loading notifications...
-            </div>
+      <div class="notification-filters">
+      <input type="text" id="searchInput" placeholder="Search notifications...">
+      <select id="dateFilter">
+        <option value="all">All Dates</option>
+        <option value="week">Last 7 Days</option>
+        <option value="month">Last 30 Days</option>
+      </select>
+    </div>
+    
+    <div id="notificationList" class="notification-list"></div>
         <div class="section1">
             <!-- Public or placeholder content -->
             <div class="protected-section">
