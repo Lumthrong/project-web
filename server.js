@@ -19,13 +19,19 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Add this during server initialization
+const uploadDir = path.join(__dirname, 'docs', 'uploads', 'notifications');
+fs.mkdir(uploadDir, { recursive: true }, (err) => {
+  if (err) console.error('Could not create upload directory:', err);
+  else console.log('Upload directory ready:', uploadDir);
+});
 // Configure multer storage for notifications
 const notificationStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const destPath = path.join(__dirname, 'docs', 'uploads', 'notifications');
-    fs.mkdir(destPath, { recursive: true })
-      .then(() => cb(null, destPath))
-      .catch(err => cb(err));
+ // Use callback-style mkdir
+    fs.mkdir(destPath, { recursive: true }, (err) => {
+      if (err) return cb(err);
+      cb(null, destPath);
+    });
   },
   filename: (req, file, cb) => {
     const uniqueName = `${Date.now()}-${file.originalname}`;
@@ -34,7 +40,22 @@ const notificationStorage = multer.diskStorage({
 });
 
 const upload = multer(); // For CSV uploads
-const docUpload = multer({ storage: notificationStorage }); // For notification documents
+const docUpload = multer({
+  storage: notificationStorage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF/DOC/DOCX allowed'), false);
+    }
+  }
+});
 
 const app = express();
 
