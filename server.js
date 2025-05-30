@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Create uploads directory if not exists
-fs.mkdirSync('uploads/notifications', { recursive: true });
+fs.mkdirSync('uploads', { recursive: true });
 
 // Configure multer storage for notifications
 const notificationStorage = multer.diskStorage({
@@ -554,7 +554,7 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
   try {
     let documentPath = null;
     if (file) {
-      documentPath = `/uploads/notifications/${file.filename}`;
+      documentPath = `/uploads/${file.filename}`;
     }
 
     await pool.query(
