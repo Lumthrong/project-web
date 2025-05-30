@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const link = addForm.link.value.trim();
 
     if (!title || !description) {
-      alert('Please fill in title and description.');
+      showMessage('Please fill in title and description.');
       return;
     }
 
