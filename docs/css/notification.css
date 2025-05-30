@@ -10,6 +10,7 @@
     max-width: 900px;
     margin: 60px auto;
     display: flex;
+    flex-direction: column;
     justify-content: center;
 }
 /* === Section1 Styling === */
