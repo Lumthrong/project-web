@@ -25,7 +25,7 @@ async function adminLogin(e) {
 
             // Show logout button
             showLogoutButton();
-            loadNotification();
+            loadNotifications();
         } else {
             message.textContent = 'Invalid username or password';
             message.className = 'message error';
@@ -188,7 +188,6 @@ async function loadNotifications() {
 
 // Add notification form handler
 document.addEventListener('DOMContentLoaded', () => {
-  // ... (Existing admin login and CSV event listeners)
   
   const addForm = document.getElementById('addNotificationForm');
   if (addForm) {
@@ -221,25 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
-// Check admin session on load
-async function checkAdminSession() {
-  try {
-    const res = await fetch('https://project-web-toio.onrender.com/check-admin-session', { 
-      credentials: 'include' 
-    });
-    const data = await res.json();
-    
-    if (data.loggedIn) {
-      document.getElementById('adminControls').classList.remove('hidden');
-      document.getElementById('adminLoginForm').classList.add('hidden');
-      showLogoutButton();
-      loadNotifications();
-    }
-  } catch (err) {
-    console.error('Session check failed', err);
-  }
-}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
