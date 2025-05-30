@@ -25,13 +25,19 @@ fs.mkdir(uploadDir, { recursive: true }, (err) => {
   if (err) console.error('Could not create upload directory:', err);
   else console.log('Upload directory ready:', uploadDir);
 });
+
 // Configure multer storage for notifications
 const notificationStorage = multer.diskStorage({
- // Use callback-style mkdir
-    fs.mkdir(destPath, { recursive: true }, (err) => {
-      if (err) return cb(err);
-      cb(null, destPath);
-    });
+  destination: (req, file, cb) => {
+    const destPath = path.join(__dirname, 'docs', 'uploads', 'notifications');
+    // Use fs.promises to create directory and then call callback
+    fs.promises.mkdir(destPath, { recursive: true })
+      .then(() => {
+        cb(null, destPath);
+      })
+      .catch(err => {
+        cb(err);
+      });
   },
   filename: (req, file, cb) => {
     const uniqueName = `${Date.now()}-${file.originalname}`;
