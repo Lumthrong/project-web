@@ -175,31 +175,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Add new notification
   addForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const title = addForm.title.value.trim();
-    const description = addForm.description.value.trim();
-    const link = addForm.link.value.trim();
+  const formData = new FormData(addForm);
 
-    if (!title || !description) {
-      showMessage('Please fill in title and description.');
-      return;
-    }
+  if (!formData.get('title') || !formData.get('description')) {
+    alert('Please fill in title and description.');
+    return;
+  }
 
-    try {
-      await fetch('https://project-web-toio.onrender.com/add-notification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, link })
-      });
-      addForm.reset();
-      loadNotifications();
-    } catch (err) {
-      console.error('Error adding notification:', err);
-    }
-  });
+  try {
+    await fetch('https://project-web-toio.onrender.com/add-notification', {
+      method: 'POST',
+      body: formData,
+    });
+
+    addForm.reset();
+    loadNotifications();
+  } catch (err) {
+    console.error('Error adding notification:', err);
+  }
+});
 
   // Initial load
   loadNotifications();
