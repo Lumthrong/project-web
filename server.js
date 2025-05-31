@@ -581,38 +581,51 @@ async function sendNotificationEmail(notification) {
 
     // Send email to each user
     for (const user of users) {
-      const mailOptions = {
-        from: '"Little Flower School" <iamrein22@gmail.com>',
-        to: user.username,
-        subject: `New Notification: ${notification.title}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2c3e50;">New School Notification</h2>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
-              <h3 style="margin-top: 0;">${escapeHtml(notification.title)}</h3>
-              <p>${escapeHtml(notification.description)}</p>
-              ${
-                notification.document_data
-                  ? `<p><a href="${escapeHtml(
-                      `https://project-web-toio.onrender.com/notification-document/${notification.id}`
-                    )}" 
-                      style="display: inline-block; background: #3498db; color: white; 
-                      padding: 10px 15px; text-decoration: none; border-radius: 4px;">
-                      View Document
-                    </a></p>`
-                  : ''
-              }
-            </div>
-            <p style="color: #7f8c8d; margin-top: 20px;">
-              You're receiving this email because you subscribed to school notifications.
-              <br>
-              <a href="${escapeHtml(
-                'https://your-school-domain.com/unsubscribe'
-              )}" style="color: #3498db;">Unsubscribe</a>
-            </p>
-          </div>
-        `
-      };
+      // In your sendNotificationEmail function
+const mailOptions = {
+  from: '"Little Flower School" <iamrein22@gmail.com>',
+  to: user.username,
+  subject: `New Notification: ${notification.title}`,
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      <div style="background: #2c3e50; color: white; padding: 20px; text-align: center;">
+        <h2 style="margin: 0;">Little Flower Higher Secondary School</h2>
+      </div>
+      
+      <div style="padding: 25px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">New Notification: ${escapeHtml(notification.title)}</h3>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">
+          <p style="margin: 0; line-height: 1.6; color: #34495e;">${escapeHtml(notification.description)}</p>
+        </div>
+        
+        ${
+          notification.document_data
+            ? `<div style="margin-top: 25px; text-align: center;">
+                <a href="${escapeHtml(`https://project-web-toio.onrender.com/notification-document/${notification.id}`)}" 
+                   style="display: inline-block; background: #3498db; color: white; 
+                          padding: 12px 24px; text-decoration: none; border-radius: 4px;
+                          font-weight: bold;">
+                  Download Document
+                </a>
+              </div>`
+            : ''
+        }
+      </div>
+      
+      <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+        <p style="color: #7f8c8d; margin: 0; font-size: 0.9em;">
+          You're receiving this email because you're registered at Little Flower Higher Secondary School.
+          <br>
+          <a href="${escapeHtml('https://your-school-domain.com/unsubscribe')}" 
+             style="color: #3498db; text-decoration: none;">
+            Unsubscribe from notifications
+          </a>
+        </p>
+      </div>
+    </div>
+  `
+};
 
       await transporter.sendMail(mailOptions);
     }
@@ -664,18 +677,25 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
     res.status(500).send('Error adding notification');
   }
 });
-// Unsubscribe endpoint
+// Enhanced unsubscribe endpoint
 app.post('/unsubscribe', async (req, res) => {
-  const { email } = req.body;
+  const { email, unsubscribeAll } = req.body;
+  
   try {
-    await pool.query(
-      'UPDATE users SET notification_preferences = 0 WHERE username = ?',
-      [email]
-    );
-    res.send('You have been unsubscribed from notifications');
+    if (unsubscribeAll) {
+      // Unsubscribe completely
+      await pool.query(
+        'UPDATE users SET notification_preferences = 0 WHERE username = ?',
+        [email]
+      );
+      res.json({ success: true, message: 'Unsubscribed from all notifications' });
+    } else {
+      // Future: Implement category-based unsubscribe
+      res.json({ success: true, message: 'Preferences updated (partial unsubscribe coming soon)' });
+    }
   } catch (err) {
     console.error('Unsubscribe error:', err);
-    res.status(500).send('Error processing unsubscribe request');
+    res.status(500).json({ success: false, message: 'Error processing request' });
   }
 });
 // Get document endpoint
