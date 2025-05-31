@@ -87,10 +87,9 @@
 </html>
 
   <script>
-    document.getElementById('unsubscribeForm').addEventListener('submit', async (e) => {
+document.getElementById('unsubscribeForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
-  const unsubscribeAll = document.getElementById('unsubscribeAll').checked;
   const messageElement = document.getElementById('unsubscribeMessage');
   
   // Clear previous state
@@ -101,19 +100,20 @@
     const response = await fetch('https://project-web-toio.onrender.com/unsubscribe', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ email, unsubscribeAll })
+      body: JSON.stringify({ email })
     });
     
     const result = await response.json();
     
     if (result.success) {
       messageElement.innerHTML = `
-        <i class="fas fa-check-circle message-icon"></i>
-        <div class="message-content">
-          You've been unsubscribed from email notifications successfully.
-        </div>
-        <div class="redirect-info">
-          You will be redirected to the homepage in 5 seconds...
+        <div class="message-container success-message">
+          <i class="fas fa-check-circle message-icon"></i>
+          <div class="message-text">${result.message}</div>
+          <div class="redirect-text">
+            <i class="fas fa-envelope"></i> A confirmation email has been sent to ${email}
+            <br>You will be redirected to the homepage in 5 seconds...
+          </div>
         </div>
       `;
       messageElement.className = 'success';
