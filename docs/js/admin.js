@@ -204,40 +204,46 @@ async function handleDelete() {
   }
 }
 // Add notification form handler
-document.addEventListener('DOMContentLoaded', () => {
-  const addForm = document.getElementById('addNotificationForm');
+// Update form submission to handle JSON response
+document.getElementById('addNotificationForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const messageElement = form.querySelector('.showMessage');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.innerHTML;
   
-  if (addForm) {
-    addForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const messageElement = addForm.querySelector('.showMessage');
-      const formData = new FormData(addForm);
-      
-      try {
-        const response = await fetch('https://project-web-toio.onrender.com/add-notification', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          messageElement.textContent = 'Notification added successfully!';
-          messageElement.className = 'showMessage success';
-          addForm.reset();
-          
-          // Add the new notification without reloading all
-          const newNotification = await response.json();
-          addNotificationToTable(newNotification);
-        } else {
-          messageElement.textContent = 'Failed to add notification';
-          messageElement.className = 'showMessage error';
-        }
-      } catch (err) {
-        console.error('Notification error:', err);
-        messageElement.textContent = 'Error adding notification';
-        messageElement.className = 'showMessage error';
-      }
+  try {
+    // Show loading state on button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    
+    const formData = new FormData(form);
+    const response = await fetch('https://project-web-toio.onrender.com/add-notification', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
     });
+    
+    if (response.ok) {
+      const newNotification = await response.json();
+      messageElement.textContent = 'Notification added and emails sent!';
+      messageElement.className = 'showMessage success';
+      form.reset();
+      
+      // Add to UI immediately
+      addNotificationToTable(newNotification);
+    } else {
+      messageElement.textContent = 'Failed to add notification';
+      messageElement.className = 'showMessage error';
+    }
+  } catch (err) {
+    console.error('Notification error:', err);
+    messageElement.textContent = 'Error adding notification';
+    messageElement.className = 'showMessage error';
+  } finally {
+    // Restore button state
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
   }
 });
 
