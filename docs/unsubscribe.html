@@ -1,18 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unsubscribe</title>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="stylesheet" htef="css/unsubscribe.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Little Flower Higher Secondary School</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/unsubscribe.css" />
+  <link rel="stylesheet" href="css/mediaquery.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <script src="https://unpkg.com/lunr/lunr.js"></script>
 </head>
+
 <body>
-  <div class="header">
-    <!-- Your existing header -->
-  </div>
+  <!-- Header -->
+  <header class="header">
+    <h1 class="logo"><a href="index.html">Little Flower Higher Secondary School</a></h1>
+    <div class="nav">
+      <button id="menuToggle" class="menu-toggle"><i class="fa fa-bars"></i></button>
+      <nav class="navbar">
+        <ul class="menu">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="facilities.html">Facilities</a></li>
+          <li><a href="notification.html">Notification</a></li>
+          <li id="authItem"><a href="login.html" id="authLink"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+          <li id="logoutItem" style="display: none;">
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <div id="usernameDisplay"></div>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
   <main class="email-container">
+    <div class="unsubscribe-container">
     <div class="email-header">
       <h2>Little Flower Higher Secondary School</h2>
     </div>
@@ -36,11 +59,35 @@
       </form>
       <div id="unsubscribeMessage"></div>
     </div>
+    </div>
   </main>
 
+  <!-- Footer -->
   <footer>
-    <!-- Your existing footer -->
+    <div class="footer-links">
+      <h1>Quick Links</h1>
+      <ul>
+        <li><a href="student.html">Student</a></li>
+        <li><a href="faculty.html">Faculty</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="footer-end">
+      <div class="footer-info"></div>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+      </div>
+    </div>
+    <p>2025 Little Flower Higher Secondary School. All rights reserved.</p>
   </footer>
+
+  <script src="js/script.js"></script>
+  <script src="js/notification.js"></script>
+  <script src="js/loginsignup.js"></script>
+</body>
+</html>
 
   <script>
     document.getElementById('unsubscribeForm').addEventListener('submit', async (e) => {
