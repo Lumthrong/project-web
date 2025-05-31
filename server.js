@@ -686,6 +686,7 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
     res.status(500).send('Error adding notification');
   }
 });
+
 // Enhanced unsubscribe endpoint
 app.post('/unsubscribe', async (req, res) => {
   const { email } = req.body;
@@ -702,7 +703,7 @@ app.post('/unsubscribe', async (req, res) => {
     
     // Check if email exists in database
     const [users] = await pool.query(
-      'SELECT id, full_name FROM users WHERE username = ?',
+      'SELECT id FROM users WHERE username = ?', // Only select id
       [email]
     );
     
@@ -712,8 +713,6 @@ app.post('/unsubscribe', async (req, res) => {
         message: 'Email not registered. Try again with your registered email.' 
       });
     }
-    
-    const user = users[0];
     
     // Update preferences
     await pool.query(
@@ -736,7 +735,7 @@ app.post('/unsubscribe', async (req, res) => {
             <div style="padding: 25px;">
               <h3 style="color: #7B1818; margin-top: 0;">Notification Preferences Updated</h3>
               
-              <p>Hello ${user.full_name || 'Subscriber'},</p>
+              <p>Hello,</p>
               
               <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #7B1818;">
                 <p style="margin: 0; line-height: 1.6; color: #34495e;">
