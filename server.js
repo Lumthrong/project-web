@@ -572,8 +572,57 @@ app.get('/notifications', async (req, res) => {
   }
 });
 
-// Add notification with document
-// Add notification with document stored as BLOB
+// Add this function to send notification emails
+async function sendNotificationEmail(notification) {
+  try {
+    // Fetch all users who should receive notifications
+    const [users] = await pool.query(
+      'SELECT username, name FROM users WHERE notification_preferences = 1'
+    );
+
+    // Send email to each user
+    for (const user of users) {
+      const mailOptions = {
+        from: '"Little Flower School" <iamrein22@gmail.com>',
+        to: user.username,
+        subject: `New Notification: ${notification.title}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2c3e50;">New School Notification</h2>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+              <h3 style="margin-top: 0;">${escapeHtml(notification.title)}</h3>
+              <p>${escapeHtml(notification.description)}</p>
+              ${
+                notification.document_data
+                  ? `<p><a href="${escapeHtml(
+                      `https://project-web-toio.onrender.com/notification-document/${notification.id}`
+                    )}" 
+                      style="display: inline-block; background: #3498db; color: white; 
+                      padding: 10px 15px; text-decoration: none; border-radius: 4px;">
+                      View Document
+                    </a></p>`
+                  : ''
+              }
+            </div>
+            <p style="color: #7f8c8d; margin-top: 20px;">
+              You're receiving this email because you subscribed to school notifications.
+              <br>
+              <a href="${escapeHtml(
+                'https://your-school-domain.com/unsubscribe'
+              )}" style="color: #3498db;">Unsubscribe</a>
+            </p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+    }
+  } catch (err) {
+    console.error('Error sending notification emails:', err);
+  }
+}
+
+// Update the add-notification endpoint
 app.post('/add-notification', docUpload.single('document'), async (req, res) => {
   const { title, description } = req.body;
   const file = req.file;
@@ -584,19 +633,33 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
 
   try {
     let documentData = null;
+    let documentType = null;
+
     if (file) {
-      // Read file into buffer
       documentData = fs.readFileSync(file.path);
-      // Remove temp file
+      documentType = file.mimetype;
       fs.unlinkSync(file.path);
     }
 
-    await pool.query(
-      'INSERT INTO notifications (title, description, document_data) VALUES (?, ?, ?)',
-      [title, description, documentData]
+    const [result] = await pool.query(
+      'INSERT INTO notifications (title, description, document_data, document_type) VALUES (?, ?, ?, ?)',
+      [title, description, documentData, documentType]
+    );
+    
+    const newNotification = {
+      id: result.insertId,
+      title,
+      description,
+      document_data: documentData,
+      created_at: new Date().toISOString()
+    };
+
+    // Send emails in the background (don't wait for completion)
+    sendNotificationEmail(newNotification).catch(err => 
+      console.error('Email sending failed:', err)
     );
 
-    res.status(201).send('Notification added');
+    res.status(201).json(newNotification);
   } catch (err) {
     console.error('Error adding notification:', err);
     res.status(500).send('Error adding notification');
