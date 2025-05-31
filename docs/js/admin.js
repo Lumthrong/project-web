@@ -137,7 +137,7 @@ async function loadNotifications() {
     const data = await res.json();
 
     const tbody = document.querySelector('#notificationTable tbody');
-    tbody.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="4" class="loading">Loading notifications...</td></tr>';
 
     data.forEach(notification => {
       const row = document.createElement('tr');
@@ -182,14 +182,15 @@ async function loadNotifications() {
       });
     });
   } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="4" class="error">Error loading notifications</td></tr>';
     console.error('Error loading notifications:', err);
   }
 }
 
 // Add notification form handler
 document.addEventListener('DOMContentLoaded', () => {
-  
   const addForm = document.getElementById('addNotificationForm');
+  
   if (addForm) {
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -207,6 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
           messageElement.textContent = 'Notification added successfully!';
           messageElement.className = 'showMessage success';
           addForm.reset();
+          
+          // Refresh notifications immediately
           loadNotifications();
         } else {
           messageElement.textContent = 'Failed to add notification';
