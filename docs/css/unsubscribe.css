@@ -93,38 +93,81 @@
   color: beige;
 }
 
+/* Unsubscribe Message Styles - Customized for your design */
 #unsubscribeMessage {
-  margin-top: 15px;
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 6px;
   text-align: center;
-  font-size: 15px;
-  padding: 8px 12px;
-  border-radius: 5px;
-  display: none;
+  display: none; /* Hidden by default */
 }
 
 #unsubscribeMessage.success {
-  color: #155724;
   background-color: #d4edda;
   border: 1px solid #c3e6cb;
+  color: #155724;
+  display: block;
 }
 
 #unsubscribeMessage.error {
-  color: #721c24;
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
+  color: #721c24;
+  display: block;
 }
 
-/* Responsive */
+.message-icon {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.message-content {
+  margin-bottom: 10px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.redirect-info {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* Animation for success icon */
+@keyframes checkmark-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.fa-check-circle {
+  color: #28a745;
+  animation: checkmark-pulse 0.6s ease;
+}
+
+.fa-exclamation-circle {
+  color: #dc3545;
+}
+
+.fa-exclamation-triangle {
+  color: #ffc107;
+}
+
+/* Responsive adjustments */
 @media (max-width: 600px) {
-  .unsubscribe-container {
-    padding: 20px;
+  #unsubscribeMessage {
+    padding: 15px;
   }
-
-  .unsubscribe-container .email-header h2 {
-    font-size: 20px;
+  
+  .message-icon {
+    font-size: 2rem;
   }
-
-  .unsubscribe-container h3 {
-    font-size: 18px;
+  
+  .message-content {
+    font-size: 0.9rem;
   }
 }
