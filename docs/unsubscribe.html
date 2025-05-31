@@ -36,9 +36,6 @@
 
   <main class="email-container">
     <div class="unsubscribe-container">
-    <div class="email-header">
-      <h2>Little Flower Higher Secondary School</h2>
-    </div>
     
     <div class="email-content">
       <h3>Notification Preferences</h3>
@@ -91,24 +88,52 @@
 
   <script>
     document.getElementById('unsubscribeForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const unsubscribeAll = document.getElementById('unsubscribeAll').checked;
-      
-      try {
-        const response = await fetch('https://project-web-toio.onrender.com/unsubscribe', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ email, unsubscribeAll })
-        });
-        
-        const result = await response.json();
-        document.getElementById('unsubscribeMessage').textContent = 
-          result.success ? 'Preferences updated successfully!' : 'Error updating preferences';
-      } catch (err) {
-        document.getElementById('unsubscribeMessage').textContent = 'Network error. Please try again.';
-      }
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const unsubscribeAll = document.getElementById('unsubscribeAll').checked;
+  const messageElement = document.getElementById('unsubscribeMessage');
+  
+  try {
+    const response = await fetch('https://project-web-toio.onrender.com/unsubscribe', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, unsubscribeAll })
     });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Show success message with checkmark
+      messageElement.innerHTML = `
+        <div class="success-message">
+          <i class="fas fa-check-circle"></i>
+          ${result.message || 'You have been unsubscribed successfully!'}
+          <p>Redirecting to homepage in 5 seconds...</p>
+        </div>
+      `;
+      
+      // Redirect after 5 seconds
+      setTimeout(() => {
+        window.location.href = 'https://lumthrong.github.io/project-web/index.html';
+      }, 5000);
+    } else {
+      // Show error message
+      messageElement.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          ${result.message || 'Error updating preferences'}
+        </div>
+      `;
+    }
+  } catch (err) {
+    messageElement.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        Network error. Please try again.
+      </div>
+    `;
+  }
+});
   </script>
 </body>
 </html>
