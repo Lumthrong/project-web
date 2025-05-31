@@ -191,3 +191,16 @@ td a{
 }
 td a:hover{
             color: var(--danger);
+            
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.error {
+  text-align: center;
+  padding: 20px;
+  color: #d9534f;
+}
