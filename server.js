@@ -576,7 +576,7 @@ async function sendNotificationEmail(notification) {
   try {
     // Fetch all users who should receive notifications
     const [users] = await pool.query(
-      'SELECT username, name FROM users WHERE notification_preferences = 1'
+      'SELECT username FROM users WHERE notification_preferences = 1'
     );
 
     // Send email to each user
