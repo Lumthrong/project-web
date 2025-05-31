@@ -160,6 +160,7 @@
         }
         #addNotificationForm button:hover{
           background: #9A2A2A;
+         margin-bottom:20px;
         }
          .notification{
           display:flex;
