@@ -32,7 +32,8 @@ async function fetchNotifications() {
         </div>
         <p>${escapeHtml(n.description)}</p>
         ${n.document_path ? `
-          <a href="https://project-web-toio.onrender.com${escapeHtml(n.document_path)}" 
+          <!-- In notification.html -->
+          <a href="/notification-document/${notification.id}"
              class="notification-document" 
              target="_blank">
             <i class="fas fa-file-download"></i>
