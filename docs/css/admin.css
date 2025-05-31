@@ -198,9 +198,3 @@ td a:hover{
   color: #666;
   font-style: italic;
 }
-
-.error {
-  text-align: center;
-  padding: 20px;
-  color: #d9534f;
-}
