@@ -93,6 +93,10 @@
   const unsubscribeAll = document.getElementById('unsubscribeAll').checked;
   const messageElement = document.getElementById('unsubscribeMessage');
   
+  // Clear previous state
+  messageElement.innerHTML = '';
+  messageElement.className = '';
+  
   try {
     const response = await fetch('https://project-web-toio.onrender.com/unsubscribe', {
       method: 'POST',
@@ -103,35 +107,37 @@
     const result = await response.json();
     
     if (result.success) {
-      // Show success message with checkmark
       messageElement.innerHTML = `
-        <div class="success-message">
-          <i class="fas fa-check-circle"></i>
-          ${result.message || 'You have been unsubscribed successfully!'}
-          <p>Redirecting to homepage in 5 seconds...</p>
+        <i class="fas fa-check-circle message-icon"></i>
+        <div class="message-content">
+          You've been unsubscribed from email notifications successfully.
+        </div>
+        <div class="redirect-info">
+          You will be redirected to the homepage in 5 seconds...
         </div>
       `;
+      messageElement.className = 'success';
       
-      // Redirect after 5 seconds
       setTimeout(() => {
         window.location.href = 'https://lumthrong.github.io/project-web/index.html';
       }, 5000);
     } else {
-      // Show error message
       messageElement.innerHTML = `
-        <div class="error-message">
-          <i class="fas fa-exclamation-circle"></i>
+        <i class="fas fa-exclamation-circle message-icon"></i>
+        <div class="message-content">
           ${result.message || 'Error updating preferences'}
         </div>
       `;
+      messageElement.className = 'error';
     }
   } catch (err) {
     messageElement.innerHTML = `
-      <div class="error-message">
-        <i class="fas fa-exclamation-circle"></i>
+      <i class="fas fa-exclamation-triangle message-icon"></i>
+      <div class="message-content">
         Network error. Please try again.
       </div>
     `;
+    messageElement.className = 'error';
   }
 });
   </script>
