@@ -59,7 +59,7 @@
             background: var(--secondary);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 1rem;
             cursor: pointer;
             transition: background 0.3s;
@@ -157,10 +157,10 @@
           border:none;
           padding:10px;
           border-radius: 6px;
+          margin-bottom:20px;
         }
         #addNotificationForm button:hover{
           background: #9A2A2A;
-         margin-bottom:20px;
         }
          .notification{
           display:flex;
