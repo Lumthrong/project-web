@@ -131,14 +131,23 @@ async function uploadCSV() {
 }
 
 // Load notifications with document links
-async function loadNotifications() {
+async function loadNotifications(showLoading = true) {
+  const tbody = document.querySelector('#notificationTable tbody');
+  if (!tbody) return;
+  
   try {
+    // Show loading indicator only when requested
+    if (showLoading) {
+      tbody.innerHTML = '<tr><td colspan="4" class="loading">Loading notifications...</td></tr>';
+    }
+    
     const res = await fetch('https://project-web-toio.onrender.com/notifications');
     const data = await res.json();
-
-    const tbody = document.querySelector('#notificationTable tbody');
-    tbody.innerHTML = '<tr><td colspan="4" class="loading">Loading notifications...</td></tr>';
-
+    
+    // Clear existing rows
+    tbody.innerHTML = '';
+    
+    // Add new rows
     data.forEach(notification => {
       const row = document.createElement('tr');
       row.innerHTML = `
@@ -160,36 +169,40 @@ async function loadNotifications() {
       `;
       tbody.appendChild(row);
     });
-
-    // Add delete handlers
+    
+    // Reattach delete handlers
     document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        if (confirm('Are you sure you want to delete this notification?')) {
-          try {
-            const response = await fetch(`https://project-web-toio.onrender.com/delete-notification/${id}`, { 
-              method: 'DELETE',
-              credentials: 'include'
-            });
-            
-            if (response.ok) {
-              loadNotifications();
-            } else {
-              alert('Failed to delete notification');
-            }
-          } catch (err) {
-            console.error('Delete error:', err);
-            alert('Error deleting notification');
-          }
-        }
-      });
+      btn.addEventListener('click', handleDelete);
     });
+    
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="4" class="error">Error loading notifications</td></tr>';
     console.error('Error loading notifications:', err);
+    tbody.innerHTML = '<tr><td colspan="4" class="error">Error loading notifications</td></tr>';
   }
 }
 
+// Dedicated delete handler
+async function handleDelete() {
+  const id = this.dataset.id;
+  if (confirm('Delete this notification?')) {
+    try {
+      const response = await fetch(`https://project-web-toio.onrender.com/delete-notification/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        // Remove the row immediately without reloading all notifications
+        this.closest('tr').remove();
+      } else {
+        alert('Failed to delete notification');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Error deleting notification');
+    }
+  }
+}
 // Add notification form handler
 document.addEventListener('DOMContentLoaded', () => {
   const addForm = document.getElementById('addNotificationForm');
@@ -212,8 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
           messageElement.className = 'showMessage success';
           addForm.reset();
           
-          // Refresh notifications immediately
-          loadNotifications();
+          // Add the new notification without reloading all
+          const newNotification = await response.json();
+          addNotificationToTable(newNotification);
         } else {
           messageElement.textContent = 'Failed to add notification';
           messageElement.className = 'showMessage error';
@@ -227,11 +241,46 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Add new notification directly to the table
+function addNotificationToTable(notification) {
+  const tbody = document.querySelector('#notificationTable tbody');
+  
+  // Create new row
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${notification.title}</td>
+    <td>${notification.description}</td>
+    <td>
+      ${notification.document_data ? 
+        `<a href="https://project-web-toio.onrender.com/notification-document/${notification.id}" target="_blank">
+          View Document
+        </a>` : 
+        'No document'
+      }
+    </td>
+    <td>
+      <button class="delete-btn" data-id="${notification.id}">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+    </td>
+  `;
+  
+  // Add to the top of the table
+  tbody.insertBefore(row, tbody.firstChild);
+  
+  // Attach delete handler
+  const deleteBtn = row.querySelector('.delete-btn');
+  deleteBtn.addEventListener('click', handleDelete);
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('adminLoginForm')?.addEventListener('submit', adminLogin);
   document.getElementById('uploadCsvBtn')?.addEventListener('click', uploadCSV);
   checkAdminSession();
+  document.getElementById('reloadNotifications')?.addEventListener('click', () => {
+    loadNotifications(true); // Force loading indicator
+  });
 });
     
 
