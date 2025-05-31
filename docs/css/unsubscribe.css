@@ -1,0 +1,130 @@
+.unsubscribe-body {
+  display: flex;
+  justify-content: center;
+}
+
+.unsubscribe-container {
+  background: white;
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.unsubscribe-container .email-header {
+  background-color: #7B1818;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.unsubscribe-container .email-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.unsubscribe-container h3 {
+  text-align: center;
+  color: #9A2A2A;
+  margin-bottom: 20px;
+}
+
+.unsubscribe-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+.unsubscribe-container .form-group {
+  margin-bottom: 15px;
+}
+
+.unsubscribe-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #7B1818;
+}
+
+.unsubscribe-container input[type="email"],
+.unsubscribe-container input[type="checkbox"] {
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid grey;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.unsubscribe-container input[type="checkbox"] {
+  width: auto;
+  transform: scale(1.2);
+  margin-right: 10px;
+}
+
+.unsubscribe-container .form-group label[for="unsubscribeAll"] {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+}
+
+.unsubscribe-container input[type="email"]:focus {
+  outline: none;
+  border: 1px solid #9A2A2A;
+  box-shadow: 0 0 5px rgba(154, 42, 42, 0.4);
+}
+
+.unsubscribe-container .btn {
+  background-color: #7B1818;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.unsubscribe-container .btn:hover {
+  background-color: #9A2A2A;
+  color: beige;
+}
+
+#unsubscribeMessage {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 15px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  display: none;
+}
+
+#unsubscribeMessage.success {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+#unsubscribeMessage.error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .unsubscribe-container {
+    padding: 20px;
+  }
+
+  .unsubscribe-container .email-header h2 {
+    font-size: 20px;
+  }
+
+  .unsubscribe-container h3 {
+    font-size: 18px;
+  }
+}
