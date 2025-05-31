@@ -144,11 +144,14 @@ async function loadNotifications() {
       row.innerHTML = `
         <td>${notification.title}</td>
         <td>${notification.description}</td>
-        <td>${
-          notification.document_data 
-            ? `<a href="https://project-web-toio.onrender.com/notification-document/${notification.id}" target="_blank">View Document</a>` 
-            : 'No document'
-        }</td>
+        <td>
+          ${notification.document_data ? 
+            `<a href="https://project-web-toio.onrender.com/notification-document/${notification.id}" target="_blank">
+              View Document
+            </a>` : 
+            'No document'
+          }
+        </td>
         <td>
           <button class="delete-btn" data-id="${notification.id}">
             <i class="fas fa-trash"></i> Delete
