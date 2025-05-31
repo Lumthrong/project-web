@@ -626,7 +626,7 @@ const mailOptions = {
         <p style="color: #7f8c8d; margin: 0; font-size: 0.9em;">
           You're receiving this email because you're registered at Little Flower Higher Secondary School.
           <br>
-          <a href="${escapeHtml('https://your-school-domain.com/unsubscribe')}" 
+          <a href="${escapeHtml('https://lumthrong.github.io/project-web/unsubscribe.html')}" 
              style="color: #3498db; text-decoration: none;">
             Unsubscribe from notifications
           </a>
