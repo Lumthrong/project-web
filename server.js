@@ -61,7 +61,6 @@ const docUpload = multer({
       cb(new Error('Invalid file type. Only PDF/DOC/DOCX allowed'), false);
     }
   }
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
 const app = express();
