@@ -136,6 +136,19 @@
   color: inherit;
   opacity: 0.8;
 }
+/* Add to your CSS */
+.message-container .fa-envelope {
+  color: #7B1818;
+  margin-right: 5px;
+}
+
+.redirect-text {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
 
 /* Animation for success icon */
 @keyframes checkmark-pulse {
