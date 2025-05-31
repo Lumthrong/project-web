@@ -1,8 +1,6 @@
 // notification.js
 async function fetchNotifications() {
   const container = document.getElementById('notificationList');
-  container.innerHTML = '<div class="loading">Loading notifications...</div>';
-  
   try {
     const res = await fetch('https://project-web-toio.onrender.com/notifications');
     const notifications = await res.json();
@@ -31,9 +29,8 @@ async function fetchNotifications() {
           ${formatDate(n.created_at)}
         </div>
         <p>${escapeHtml(n.description)}</p>
-        ${n.document_path ? `
-          <!-- In notification.html -->
-          <a href="/notification-document/${notification.id}"
+        ${n.document_data ? `
+          <a href="https://project-web-toio.onrender.com/notification-document/${n.id}" 
              class="notification-document" 
              target="_blank">
             <i class="fas fa-file-download"></i>
@@ -42,7 +39,6 @@ async function fetchNotifications() {
         ` : ''}
       </div>
     `).join('');
-
     // Setup filters
     setupFilters(notifications);
 
