@@ -572,6 +572,7 @@ app.get('/notifications', async (req, res) => {
 });
 
 // Add notification with document
+// Add notification with document stored as BLOB
 app.post('/add-notification', docUpload.single('document'), async (req, res) => {
   const { title, description } = req.body;
   const file = req.file;
@@ -581,15 +582,17 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
   }
 
   try {
-    let documentPath = null;
+    let documentData = null;
     if (file) {
-      // Store relative path
-      documentPath = `/uploads/notifications/${file.filename}`;
+      // Read file into buffer
+      documentData = fs.readFileSync(file.path);
+      // Remove temp file
+      fs.unlinkSync(file.path);
     }
 
     await pool.query(
-      'INSERT INTO notifications (title, description, document_path) VALUES (?, ?, ?)',
-      [title, description, documentPath]
+      'INSERT INTO notifications (title, description, document_data) VALUES (?, ?, ?)',
+      [title, description, documentData]
     );
 
     res.status(201).send('Notification added');
@@ -598,7 +601,29 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
     res.status(500).send('Error adding notification');
   }
 });
-// Delete a notification
+
+// Get document endpoint
+app.get('/notification-document/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT document_data FROM notifications WHERE id = ?',
+      [req.params.id]
+    );
+    
+    if (!rows[0] || !rows[0].document_data) {
+      return res.status(404).send('Document not found');
+    }
+    
+    res.set('Content-Type', 'application/pdf');
+    res.send(rows[0].document_data);
+  } catch (err) {
+    console.error('Error fetching document:', err);
+    res.status(500).send('Error fetching document');
+  }
+});
+
+
+  
 // Update delete endpoint to use correct path
 app.delete('/delete-notification/:id', async (req, res) => {
   const id = req.params.id;
