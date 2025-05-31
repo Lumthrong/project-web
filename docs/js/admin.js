@@ -145,8 +145,8 @@ async function loadNotifications() {
         <td>${notification.title}</td>
         <td>${notification.description}</td>
         <td>${
-          notification.document_path 
-            ? `<a href="https://project-web-toio.onrender.com${notification.document_path}" target="_blank">View Document</a>` 
+          notification.document_data 
+            ? `<a href="https://project-web-toio.onrender.com/notification-document/${notification.id}" target="_blank">View Document</a>` 
             : 'No document'
         }</td>
         <td>
