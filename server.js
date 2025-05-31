@@ -688,25 +688,131 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
 });
 // Enhanced unsubscribe endpoint
 app.post('/unsubscribe', async (req, res) => {
-  const { email, unsubscribeAll } = req.body;
+  const { email } = req.body;
   
   try {
-    if (unsubscribeAll) {
-      // Unsubscribe completely
-      await pool.query(
-        'UPDATE users SET notification_preferences = 0 WHERE username = ?',
-        [email]
-      );
-      res.json({ success: true, message: 'Unsubscribed from all notifications' });
-    } else {
-      // Future: Implement category-based unsubscribe
-      res.json({ success: true, message: 'Preferences updated (partial unsubscribe coming soon)' });
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({ 
+        success: false, 
+        message: 'Invalid email format' 
+      });
     }
+    
+    // Check if email exists in database
+    const [users] = await pool.query(
+      'SELECT id, full_name FROM users WHERE username = ?',
+      [email]
+    );
+    
+    if (users.length === 0) {
+      return res.json({ 
+        success: false, 
+        message: 'Email not registered. Try again with your registered email.' 
+      });
+    }
+    
+    const user = users[0];
+    
+    // Update preferences
+    await pool.query(
+      'UPDATE users SET notification_preferences = 0 WHERE username = ?',
+      [email]
+    );
+    
+    // Send confirmation email
+    try {
+      const mailOptions = {
+        from: '"Little Flower School" <iamrein22@gmail.com>',
+        to: email,
+        subject: 'Notification Preferences Updated',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+            <div style="background: #7B1818; color: white; padding: 20px; text-align: center;">
+              <h2 style="margin: 0;">Little Flower Higher Secondary School</h2>
+            </div>
+            
+            <div style="padding: 25px;">
+              <h3 style="color: #7B1818; margin-top: 0;">Notification Preferences Updated</h3>
+              
+              <p>Hello ${user.full_name || 'Subscriber'},</p>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #7B1818;">
+                <p style="margin: 0; line-height: 1.6; color: #34495e;">
+                  You have successfully unsubscribed from all email notifications from Little Flower Higher Secondary School.
+                </p>
+                
+                <p style="margin: 15px 0 0; line-height: 1.6; color: #34495e;">
+                  You will no longer receive notification emails from us.
+                </p>
+              </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="color: #7f8c8d; margin: 0; font-size: 0.9em;">
+                If this was a mistake or you change your mind, you can
+                <a href="${escapeHtml('https://your-school-domain.com/subscribe')}" 
+                   style="color: #7B1818; text-decoration: none; font-weight: bold;">
+                  resubscribe here
+                </a>
+              </p>
+              <p style="color: #7f8c8d; margin: 10px 0 0; font-size: 0.8em;">
+                Little Flower Higher Secondary School<br>
+                123 School Road, City, State 12345<br>
+                Phone: (123) 456-7890
+              </p>
+            </div>
+          </div>
+        `
+      };
+      
+      await transporter.sendMail(mailOptions);
+    } catch (emailErr) {
+      console.error('Confirmation email failed:', emailErr);
+      // Don't fail the request, just log the error
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'You have successfully unsubscribed from email notifications. A confirmation email has been sent.' 
+    });
   } catch (err) {
     console.error('Unsubscribe error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error processing request' 
+    });
+  }
+});
+
+// Add this endpoint to allow resubscribing
+app.post('/subscribe', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({ success: false, message: 'Invalid email format' });
+    }
+    
+    // Update preferences
+    await pool.query(
+      'UPDATE users SET notification_preferences = 1 WHERE username = ?',
+      [email]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'You have successfully resubscribed to email notifications' 
+    });
+  } catch (err) {
+    console.error('Subscribe error:', err);
     res.status(500).json({ success: false, message: 'Error processing request' });
   }
 });
+
 // Get document endpoint
 app.get('/notification-document/:id', async (req, res) => {
   try {
