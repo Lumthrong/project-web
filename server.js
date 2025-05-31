@@ -665,7 +665,20 @@ app.post('/add-notification', docUpload.single('document'), async (req, res) => 
     res.status(500).send('Error adding notification');
   }
 });
-
+// Unsubscribe endpoint
+app.post('/unsubscribe', async (req, res) => {
+  const { email } = req.body;
+  try {
+    await pool.query(
+      'UPDATE users SET notification_preferences = 0 WHERE username = ?',
+      [email]
+    );
+    res.send('You have been unsubscribed from notifications');
+  } catch (err) {
+    console.error('Unsubscribe error:', err);
+    res.status(500).send('Error processing unsubscribe request');
+  }
+});
 // Get document endpoint
 app.get('/notification-document/:id', async (req, res) => {
   try {
