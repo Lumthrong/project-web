@@ -1,1090 +1,926 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import multer from "multer";
-import fs from "fs";
-import { createRequire } from "module";
-import { v2 as cloudinary } from "cloudinary";
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
-import admin from "firebase-admin";
-dotenv.config();
-import { exec } from "child_process";
-import { promisify } from "util";
-import { setGlobalDispatcher, Agent } from "undici";
-import https from "https";
-
-
-setGlobalDispatcher(
-  new Agent({
-    connect: { timeout: 60000 } // 60 seconds
-  })
-);
-
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-}
-
-/* ADD THIS LINE */
-const db = admin.firestore();
-
-/* ================= VERIFY FIREBASE TOKEN ================= */
-
-async function verifyToken(req, res, next) {
-
-  let token = null;
-
-  // token from header
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
-    token = req.headers.authorization.split("Bearer ")[1];
-  }
-
-  // token from URL
-  if (!token && req.query.token) {
-    token = req.query.token;
-  }
-
-  if (!token) {
-    return res.status(401).send("Unauthorized");
-  }
-
-  try {
-
-    const decoded = await admin.auth().verifyIdToken(token);
-
-    console.log("USER ROLE:", decoded.role);
-
-    req.user = decoded;
-
-    next();
-
-  } catch (err) {
-
-    return res.status(401).send("Invalid token");
-
-  }
-
-}
-/* ================= ROLE CHECK ================= */
-
-function requireRole(role) {
-
-  return async (req, res, next) => {
-
-    if (!req.user) {
-      return res.status(403).send("Forbidden");
-    }
-
-    try {
-
-      const uid = req.user.uid;
-
-      const userDoc = await db
-        .collection("users")
-        .doc(uid)
-        .get();
-
-      if (!userDoc.exists) {
-        return res.status(403).send("Forbidden");
-      }
-
-      const userRole = userDoc.data().role;
-
-      console.log("FIRESTORE ROLE:", userRole);
-
-      if (role === "teacher") {
-        if (userRole !== "teacher" && userRole !== "pending_teacher") {
-          return res.status(403).send("Forbidden");
-        }
-      }
-
-      else if (userRole !== role) {
-        return res.status(403).send("Forbidden");
-      }
-
-      next();
-
-    } catch (err) {
-
-      console.error("ROLE CHECK ERROR:", err);
-      res.status(500).send("Server error");
-
-    }
-
-  };
-
-}
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-/* ================= PATH SETUP ================= */
+import express from 'express';
+import path from 'path';
+import session from 'express-session';
+import mysql from 'mysql2/promise';
+import bcrypt from 'bcrypt';
+import fs from 'fs';
+import nodemailer from 'nodemailer';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import bodyParser from 'body-parser';
+import multer from 'multer';
+import csv from 'csv-parser';
+import PDFDocument from 'pdfkit';
+import { marked } from 'marked';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
-/* ================= DASHBOARD PROTECTION ================= */
+// Add this during server initialization
+const uploadDir = path.join(__dirname, 'docs', 'uploads', 'notifications');
+fs.mkdir(uploadDir, { recursive: true }, (err) => {
+  if (err) console.error('Could not create upload directory:', err);
+  else console.log('Upload directory ready:', uploadDir);
+});
 
-app.get("/admin.html",
-  verifyToken,
-  requireRole("admin"),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, "public/admin.html"));
+// Configure multer storage for notifications
+const notificationStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const destPath = path.join(__dirname, 'docs', 'uploads', 'notifications');
+    // Use fs.promises to create directory and then call callback
+    fs.promises.mkdir(destPath, { recursive: true })
+      .then(() => {
+        cb(null, destPath);
+      })
+      .catch(err => {
+        cb(err);
+      });
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
   }
-);
+});
 
-app.get("/teacher.html",
-  verifyToken,
-  requireRole("teacher"),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, "public/teacher.html"));
+const upload = multer(); // For CSV uploads
+const docUpload = multer({
+  storage: notificationStorage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF/DOC/DOCX allowed'), false);
+    }
   }
-);
-
-app.get("/dashboard.html",
-  verifyToken,
-  (req, res) => {
-    res.sendFile(path.join(__dirname, "public/dashboard.html"));
-  }
-);
-/* ================= STATIC FILES ================= */
-
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-/* ================= ENSURE UPLOAD FOLDER ================= */
-
-const uploadDir = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+});
+//for email notifications 
+function escapeHtml(unsafe = '') {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-/* ================= MULTER CONFIG ================= */
+const app = express();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 500 * 1024 * 1024 }
-});
-
-/* ================= EMAIL OTP SYSTEM ================= */
-
+const signupOtpStore = new Map(); // OTP store for signup verification
 const otpStore = new Map();
-
-/* ================= SEND OTP ================= */
-
-app.post("/send-otp", async (req, res) => {
-
-  const email = req.body.email.trim().toLowerCase();
-
-  if (!email)
-    return res.status(400).json({ error: "Email required" });
-
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-
-  otpStore.set(email, {
-    otp,
-    expires: Date.now() + 10 * 60 * 1000
-  });
-
-  try {
-
-    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": process.env.BREVO_API_KEY
-      },
-      body: JSON.stringify({
-        sender: {
-          email: "iamrein22@gmail.com",
-          name: "Smart Tutor"
-        },
-        to: [{ email: email }],
-        subject: "Smart Tutor Verification Code",
-        htmlContent: `
-<div style="font-family:Segoe UI,Arial;background:#f4f6fb;padding:40px">
-
-<div style="max-width:480px;margin:auto;background:white;border-radius:12px;
-box-shadow:0 10px 25px rgba(0,0,0,0.08);overflow:hidden">
-
-<div style="background:linear-gradient(135deg,#4f46e5,#6366f1);
-padding:24px;text-align:center;color:white">
-
-<h2 style="margin:0">Smart Tutor</h2>
-<p style="margin:5px 0 0 0;font-size:14px">Account Verification</p>
-
-</div>
-
-<div style="padding:30px;text-align:center">
-
-<p>Your verification code:</p>
-
-<div style="
-background:#f3f4ff;
-border:2px dashed #4f46e5;
-border-radius:10px;
-padding:18px 30px;
-display:inline-block;
-margin:15px 0;
-">
-
-<span style="
-font-size:34px;
-font-weight:700;
-letter-spacing:8px;
-color:#4f46e5;
-">
-${otp}
-</span>
-
-</div>
-
-<p>This code expires in <b>10 minutes</b>.</p>
-
-</div>
-</div>
-</div>
-`
-      })
-    });
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("BREVO ERROR:", errorText);
-      return res.status(500).json({ error: "Email send failed" });
-    }
-
-    res.json({ success: true });
-
-  } catch (err) {
-
-    console.error("BREVO EMAIL ERROR:", err);
-    res.status(500).json({ error: "Email send failed" });
-
+const PORT = process.env.PORT || 3000; // Use the port provided by Render
+//
+app.use(cors({
+  origin: 'https://lumthrong.github.io',
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'docs')));
+app.use('/uploads', express.static(path.join(__dirname, 'docs', 'uploads')));
+// MySQL connection pool
+// Adjust paths to your Aiven SSL certs or use environment variables
+const pool = mysql.createPool({
+  host: 'mysql25-iamrein22-b134.l.aivencloud.com',
+  user: 'avnadmin',
+  password: 'AVNS_9fI-t0cKjZwHMs8wk-f',
+  database: 'school',
+  port: 24234,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  ssl: {
+    ca: fs.readFileSync(path.join(__dirname, 'certs', 'ca.pem'))
   }
-
 });
 
-/* ================= VERIFY OTP ================= */
+console.log('Connected to MySQL database.');
 
-app.post("/verify-otp", (req, res) => {
+// Session config
+app.set('trust proxy', 1); // Important for secure cookies on Render
 
-  const email = String(req.body.email).trim().toLowerCase();
-  const otp = String(req.body.otp).trim();
+app.use(session({
+  secret: 'secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 365, // 24 hours
+    secure: true,        // must be true on HTTPS (Render is HTTPS)
+    sameSite: 'None',    // required for cross-site cookie sharing
+    httpOnly: true
+  }
+}));
+// Passport setup for Google OAuth
+app.use(passport.initialize());
+app.use(passport.session());
 
-  const data = otpStore.get(email);
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
 
-  if (!data) {
-    return res.status(400).json({ error: "OTP expired" });
+passport.use(new GoogleStrategy({
+  clientID: '190509381347-a7i2jlg299jftg17upf55q1f61a4l9nq.apps.googleusercontent.com',
+  clientSecret: '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',
+  callbackURL: 'https://project-web-toio.onrender.com/auth/google/callback'
+}, async (accessToken, refreshToken, profile, done) => {
+  const email = profile.emails[0].value;
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE username = ?', [email]);
+    if (rows.length === 0) {
+      await pool.query('INSERT INTO users (username, password, auth_provider) VALUES (?, ?, ?)', [
+        email,
+        '', // no password for google users
+        'google'
+      ]);
+    }
+    return done(null, { username: email });
+  } catch (err) {
+    return done(err, null);
+  }
+}));
+// Helpers for username validation
+function isValidIdentifier(value) {
+  const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  const phoneRegex = /^\d{10}$/;
+  return gmailRegex.test(value) || phoneRegex.test(value);
+}
+
+// Nodemailer transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'iamrein22@gmail.com',
+    pass: 'ljtanxotdoizurbh'
+  }
+});
+//ContactUs Section
+app.post('/contact', express.json(), async (req, res) => {
+  const { name, email, phone, subject, message } = req.body;
+
+  if (!name || !email || !phone || !subject || !message) {
+    return res.status(400).json({ message: "All fields are required." });
   }
 
-  if (Date.now() > data.expires) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9]{10}$/;
+
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format." });
+  }
+
+  if (!phoneRegex.test(phone)) {
+    return res.status(400).json({ message: "Invalid phone number. Must be 10 digits." });
+  }
+
+  const mailOptions = {
+    from: `"${name}" <${email}>`,
+    to: 'iamrein22@gmail.com',
+    subject: `Contact Form: ${subject}`,
+    text: `From: ${name}\nEmail: ${email}\nPhone: ${phone}\nSubject: ${subject}\n\n${message}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "Thanks for contacting us! We'll respond soon." });
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    res.status(500).json({ message: "Failed to send message. Please try again later." });
+  }
+});
+// Send OTP route for password recovery
+app.post('/send-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.endsWith('@gmail.com')) {
+    return res.status(400).json({ success: false, message: 'Invalid Gmail address' });
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE username = ?', [email]);
+    if (rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Email not registered' });
+    }
+
+    const now = Date.now();
+    const existing = otpStore.get(email);
+    if (existing && now - existing.lastSent < 60000) { // 1 min cooldown
+      return res.status(429).json({ success: false, message: 'Wait before resending OTP' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore.set(email, { otp, expires: now + 10 * 60 * 1000, lastSent: now }); // 10 min expiry
+
+    await transporter.sendMail({
+      from: '"LFHS.Edu" <iamrein22@gmail.com>',
+      to: email,
+      subject: 'Password Reset OTP',
+      text: `Your OTP is ${otp}. It expires in 10 minutes.`
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Verify OTP and set new password
+app.post('/verify-otp', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (typeof newPassword !== 'string' || newPassword.length < 8) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 8 characters' });
+  }
+
+  const record = otpStore.get(email);
+  if (!record) {
+    return res.status(400).json({ success: false, message: 'OTP not found or expired' });
+  }
+  if (record.expires < Date.now()) {
     otpStore.delete(email);
-    return res.status(400).json({ error: "OTP expired" });
+    return res.status(400).json({ success: false, message: 'OTP expired' });
   }
-
-  if (String(data.otp) !== otp) {
-    return res.status(400).json({ error: "Invalid OTP" });
+  if (record.otp !== otp) {
+    return res.status(400).json({ success: false, message: 'Invalid OTP' });
   }
-
-  otpStore.delete(email);
-
-  otpStore.set(email, {
-    otp,
-    expires: Date.now() + 10 * 60 * 1000
-  });
-
-  res.json({ success: true });
-
-});
-
-
-/* ================= TEACHER ACCESS REQUEST ================= */
-app.post("/notify-teacher-request", async (req, res) => {
-
-  const data = req.body;
 
   try {
-
-    await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": process.env.BREVO_API_KEY
-      },
-      body: JSON.stringify({
-
-        sender: {
-          email: process.env.EMAIL_USER,
-          name: "Smart Tutor"
-        },
-
-        to: [{ email: process.env.ADMIN_EMAIL }],
-
-        subject: "New Teacher Access Request",
-
-        htmlContent: `
-<h2>Teacher Request</h2>
-
-<p><b>Name:</b> ${data.name}</p>
-<p><b>Email:</b> ${data.email}</p>
-<p><b>Qualification:</b> ${data.qualification}</p>
-<p><b>Institution:</b> ${data.institution}</p>
-<p><b>Experience:</b> ${data.experience}</p>
-
-<p><b>Document:</b> ${data.document}</p>
-
-<p><b>Message:</b></p>
-<p>${data.message}</p>
-`
-      })
-
-    });
-
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = ? WHERE username = ?', [hashedPassword, email]);
+    otpStore.delete(email);
     res.json({ success: true });
-
   } catch (err) {
-
-    console.error(err);
-    res.status(500).json({ error: "Email failed" });
-
+    console.error('Verify OTP error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
-
 });
-/* ================= SET USER ROLE CLAIM ================= */
 
-app.post("/set-role", async (req, res) => {
+// ========== SIGNUP VERIFICATION FLOW ==========
 
-  const { uid, role } = req.body;
+// 1. Request OTP for signup (send OTP to email or phone)
+app.post('/request-signup-otp', async (req, res) => {
+  const { username } = req.body;
 
-  if (!uid || !role) {
-    return res.status(400).json({ error: "uid and role required" });
+  if (!isValidIdentifier(username)) {
+    return res.status(400).json({ message: 'Username must be a valid Gmail or 10-digit phone number' });
   }
 
   try {
-
-    await admin.auth().setCustomUserClaims(uid, { role });
-
-    // verify claim was written
-    const user = await admin.auth().getUser(uid);
-
-    console.log("ROLE SET:", user.customClaims);
-
-    res.json({ success: true });
-
-  } catch (err) {
-
-    console.error("SET ROLE ERROR:", err);
-    res.status(500).json({ error: "Failed to set role" });
-
-  }
-
-});
-/* ================= COURSE UPLOAD ================= */
-
-const multiUpload = upload.fields([
-  { name: "cover", maxCount: 1 },
-  { name: "pdf", maxCount: 1 },
-  { name: "video", maxCount: 1 }
-]);
-
-app.post("/upload", multiUpload, async (req, res) => {
-
-  try {
-
-    const { department, semester, course } = req.body;
-
-    if (!req.files || !req.files.pdf)
-      return res.status(400).json({ error: "PDF required" });
-
-    const pdfFile = req.files.pdf[0];
-    const videoFile = req.files.video ? req.files.video[0] : null;
-    const coverFile = req.files.cover ? req.files.cover[0] : null;
-
-    let coverUpload = null;
-
-    if (coverFile) {
-
-      coverUpload = await cloudinary.uploader.upload(coverFile.path, {
-        folder: "uploads/covers"
-      });
-
-    }
-
-    /* ================= EXTRACT PDF TEXT ================= */
-
-    let extractedText = null;
-
-    try {
-      const pdfBuffer = fs.readFileSync(pdfFile.path);
-      const pdfData = await pdfParse(pdfBuffer);
-      extractedText = pdfData.text.substring(0, 15000);
-    } catch (err) {
-      console.error("PDF PARSE ERROR:", err);
-    }
-
-    /* ================= CLOUDINARY PDF UPLOAD ================= */
-
-    const pdfUpload = await cloudinary.uploader.upload(pdfFile.path, {
-      resource_type: "raw",
-      folder: "uploads/pdfs"
-    });
-
-    /* ================= CLOUDINARY VIDEO UPLOAD ================= */
-
-    let videoUpload = null;
-
-    if (videoFile) {
-
-      videoUpload = await cloudinary.uploader.upload(videoFile.path, {
-        resource_type: "auto",
-        folder: "uploads/videos"
-      });
-
-    }
-
-    /* ================= DELETE TEMP FILES ================= */
-
-    fs.unlinkSync(pdfFile.path);
-    if (videoFile) fs.unlinkSync(videoFile.path);
-    if (coverFile) fs.unlinkSync(coverFile.path);
-
-    res.json({
-      success: true,
-      department,
-      semester,
-      course,
-
-      coverURL: coverUpload ? coverUpload.secure_url : null,
-      coverFilename: coverUpload ? coverUpload.public_id : null,
-
-      pdfURL: pdfUpload.secure_url,
-      pdfFilename: pdfUpload.public_id,
-
-      videoURL: videoUpload ? videoUpload.secure_url : null,
-      videoFilename: videoUpload ? videoUpload.public_id : null,
-
-      text: extractedText
-    });
-
-  }
-  catch (err) {
-
-    console.error("UPLOAD ERROR:", err);
-    res.status(500).json({ error: "Upload failed" });
-
-  }
-
-});
-
-/* ================= SECURE PDF ================= */
-app.get("/secure-pdf", verifyToken, async (req, res) => {
-
-  const url = req.query.file;
-
-  if (!url) {
-    return res.status(400).send("File missing");
-  }
-
-  try {
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      return res.status(500).send("Failed to fetch PDF");
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.send(buffer);
-
-  } catch (err) {
-
-    console.error("PDF STREAM ERROR:", err);
-    res.status(500).send("PDF stream failed");
-
-  }
-
-});
-/* ================= DELETE FILE ================= */
-
-app.delete("/delete-course/:publicId", async (req, res) => {
-
-  try {
-
-    const publicId = req.params.publicId;
-
-    if (!publicId)
-      return res.status(400).json({ error: "File id required" });
-
-    await cloudinary.uploader.destroy(publicId, {
-      resource_type: "auto"
-    });
-
-    res.json({ success: true });
-
-  }
-  catch (err) {
-
-    console.error("DELETE ERROR:", err);
-    res.status(500).json({ error: "Delete failed" });
-
-  }
-
-});
-
-/* ================= PROFILE IMAGE UPLOAD ================= */
-
-app.post("/upload-profile", upload.single("profile"), async (req, res) => {
-
-  try {
-
-    if (!req.file)
-      return res.status(400).json({ success: false });
-
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "uploads/profiles"
-    });
-
-    fs.unlinkSync(req.file.path);
-
-    res.json({
-      success: true,
-      fileURL: uploadResult.secure_url,
-      filename: uploadResult.public_id
-    });
-
-  }
-  catch (err) {
-
-    console.error("PROFILE UPLOAD ERROR:", err);
-    res.status(500).json({ success: false });
-
-  }
-
-});
-
-/* ================= AI TEST GENERATION ================= */
-async function askGroq(model, prompt) {
-
-  try {
-
-    const res = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: "user",
-              content: prompt
-            }
-          ]
-        })
+    // Check if user already exists
+    const [rows] = await pool.query('SELECT auth_provider FROM users WHERE username = ?', [username]);
+    if (rows.length > 0) {
+      if (rows[0].auth_provider === 'google') {
+        return res.status(409).json({ message: 'Google account already registered. Please use Google Sign-In.' });
       }
+      return res.status(409).json({ message: 'Username already exists' });
+    }
+
+    // Rate limit OTP sending (1 min cooldown)
+    const now = Date.now();
+    const existing = signupOtpStore.get(username);
+    if (existing && now - existing.lastSent < 60000) {
+      return res.status(429).json({ message: 'Please wait before requesting another OTP' });
+    }
+
+    // Generate OTP and store it with expiry (10 min)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    signupOtpStore.set(username, { otp, expires: now + 10 * 60 * 1000, lastSent: now });
+
+    // Send OTP email if Gmail address
+    if (username.endsWith('@gmail.com')) {
+      await transporter.sendMail({
+        from: '"LFHSSOfficial" <iamrein22@gmail.com>',
+        to: username,
+        subject: 'Signup Verification OTP',
+        text: `Your 6-digit Code for signup verification is ${otp}. It expires in 10 minutes.`
+      });
+    }
+    // If phone number, integrate SMS sending logic here
+
+    res.json({ message: '6-digit Code sent for signup verification' });
+  } catch (err) {
+    console.error('Request signup OTP error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// 2. Verify OTP and create user
+app.post('/verify-signup-otp', async (req, res) => {
+  const { username, otp, password } = req.body;
+
+  if (!isValidIdentifier(username)) {
+    return res.status(400).json({ message: 'Invalid username format' });
+  }
+  if (typeof password !== 'string' || password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  }
+
+  const record = signupOtpStore.get(username);
+  if (!record) {
+    return res.status(400).json({ message: '6-digit Code not found or expired' });
+  }
+  if (record.expires < Date.now()) {
+    signupOtpStore.delete(username);
+    return res.status(400).json({ message: 'Code expired' });
+  }
+  if (record.otp !== otp) {
+    return res.status(400).json({ message: 'Invalid 6-digit Code' });
+  }
+
+  try {
+    // Double check user doesn't exist before creating
+    const [rows] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+    if (rows.length > 0) {
+      signupOtpStore.delete(username);
+      return res.status(409).json({ message: 'Username already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      'INSERT INTO users (username, password, auth_provider) VALUES (?, ?, ?)',
+      [username, hashedPassword, 'local']
     );
 
-    const data = await res.json();
-
-    /* HANDLE GROQ ERRORS */
-
-    if (data.error) {
-      console.error("GROQ ERROR:", data.error.message);
-      return "incorrect";
-    }
-
-    /* HANDLE EMPTY RESPONSE */
-
-    if (!data.choices || !data.choices[0]) {
-      console.error("GROQ INVALID RESPONSE:", data);
-      return "incorrect";
-    }
-
-    return data.choices[0].message.content;
-
+    signupOtpStore.delete(username);
+    res.json({ message: 'Signup successful' });
+  } catch (err) {
+    console.error('Verify signup OTP error:', err);
+    res.status(500).json({ message: 'Database error during signup' });
   }
-  catch (err) {
+});
 
-    console.error("GROQ REQUEST FAILED:", err);
-    return "incorrect";
+// ========== LOGIN (local) ==========
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
+  if (!isValidIdentifier(username)) {
+    return res.status(400).json({ message: 'Invalid username format' });
   }
 
+  try {
+    const [rows] = await pool.query('SELECT id, password, auth_provider FROM users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(401).json({ message: 'Username or password error' });
+    }
+
+    const user = rows[0];
+
+    if (user.auth_provider === 'google') {
+      return res.status(403).json({ message: 'Please use Google Sign-In for this account.' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Username or password error' });
+    }
+
+    req.session.user = { username, id: user.id };
+    res.json({ message: 'Login successful' });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Database error during login' });
+  }
+});
+
+// ========== LOGOUT ==========
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logged out' });
+  });
+});
+
+// ========== PASSWORD RESET FLOW ==========
+app.post('/reset-password', async (req, res) => {
+  const { username, currentPassword, newPassword } = req.body;
+
+  // Basic input validation
+  if (!username || !currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  if (typeof newPassword !== 'string' || newPassword.length < 8) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 8 characters long' });
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT password FROM users WHERE username = ?', [username]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const user = rows[0];
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = ? WHERE username = ?', [hashedNewPassword, username]);
+
+    res.json({ success: true, message: 'Password changed successfully' });
+
+  } catch (err) {
+    console.error('Error resetting password with current password:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message, // for debugging; remove in production
+    });
+  }
+});
+
+
+// ========== GOOGLE OAUTH ==========
+app.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login.html' }),
+  (req, res) => {
+    req.session.user = { username: req.user.username };
+    res.redirect('https://lumthrong.github.io/project-web/index.html');
+  });
+
+// ========== CHECK AUTH STATUS ==========
+function requireLogin(req, res, next) {
+  if (req.session && req.session.user) {
+    next();
+  } else {
+    res.redirect('https://lumthrong.github.io/project-web/login.html');
+  }
 }
-async function verifyGemini(question, options, answer) {
+// Check authentication
+app.get('/check-auth', (req, res) => {
+  if (req.session.user) {
+    res.json({ loggedIn: true, username: req.session.user.username });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+app.get('/docs/:filename', requireLogin, (req, res) => {
+  const filePath = path.join(__dirname, 'protected_docs', req.params.filename);
 
-  const prompt = `
-Question:
-${question}
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('File not found');
+  }
 
-Options:
-${options.join("\n")}
+  res.sendFile(filePath);
+});
+const protectedPages = ['feedback', 'Alumni', 'staff', 'contact'];
+protectedPages.forEach(page => {
+  app.get(`/${page}.html`, requireLogin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'protected', `${page}.html`));
+  });
+});
 
-Proposed Correct Answer:
-${answer}
+//admin and result check route
+// Hash and insert default admin (run only once)
+(async () => {
+  const password = 'Admin@123'; // Change this
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const [existingAdmins] = await pool.query('SELECT * FROM admins WHERE username = ?', ['admin']);
+  if (existingAdmins.length === 0) {
+    await pool.query('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', hashedPassword]);
+  }
+})();
 
-Return ONLY:
-correct
-or
-incorrect
-`;
+// Admin login
+app.post('/admin-login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const [rows] = await pool.query("SELECT * FROM admins WHERE username = ?", [username]);
+    if (rows.length === 0) return res.json({ status: 'fail' });
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }]
+    const match = await bcrypt.compare(password, rows[0].password);
+    if (match) {
+      req.session.admin = username;
+      return res.json({ status: 'success' });
+    } else {
+      return res.json({ status: 'fail' });
+    }
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.json({ status: 'fail' });
+  }
+});
+
+// Admin session check
+app.get('/check-admin-session', (req, res) => {
+  if (req.session && req.session.admin) {
+    res.json({ loggedIn: true, username: req.session.admin });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
+// Admin logout
+app.post('/admin-logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logged out' });
+  });
+});
+
+// CSV upload
+app.post('/upload-csv', upload.single('csvfile'), async (req, res) => {
+  const results = [];
+
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on('data', data => results.push(data))
+    .on('end', async () => {
+      try {
+        for (const row of results) {
+          const { name, dob, roll_no, subject, marks, grade } = row;
+          const [students] = await pool.query("SELECT id FROM students WHERE roll_no = ?", [roll_no]);
+
+          let student_id;
+          if (students.length === 0) {
+            const [insertRes] = await pool.query(
+              "INSERT INTO students (name, dob, roll_no) VALUES (?, ?, ?)",
+              [name, dob, roll_no]
+            );
+            student_id = insertRes.insertId;
+          } else {
+            student_id = students[0].id;
           }
-        ]
-      })
-    }
-  );
 
-  const data = await res.json();
+          await pool.query(
+            "INSERT INTO results (student_id, subject, marks, grade) VALUES (?, ?, ?, ?)",
+            [student_id, subject, marks, grade]
+          );
+        }
 
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-  return text.toLowerCase().includes("correct");
-
-}
-
-async function verifyWithThreeModels(question, options, answer) {
-
-  const prompt = `
-Question:
-${question}
-
-Options:
-${options.join("\n")}
-
-Proposed Correct Answer:
-${answer}
-
-Return ONLY:
-correct
-or
-incorrect
-`;
-
-  try {
-
-    const [groq1, groq2, gemini] = await Promise.all([
-
-      askGroq("llama-3.3-70b-versatile", prompt),
-      askGroq("llama-3.1-8b-instant", prompt),
-      verifyGemini(question, options, answer)
-
-    ]);
-
-    const r1 = String(groq1).toLowerCase().includes("correct");
-    const r2 = String(groq2).toLowerCase().includes("correct");
-    const r3 = gemini;
-
-    const votes = [r1, r2, r3].filter(v => v).length;
-
-    return votes >= 2;
-
-  } catch (err) {
-
-    console.error("Verification error:", err);
-    return false;
-
-  }
-
-}
-
-/*regenerate math*/
-async function repairMathText(text) {
-
-  const prompt = `
-The following text was extracted from a PDF and contains
-broken mathematical symbols.
-
-Fix the text and restore the correct math expressions.
-
-Text:
-${text}
-`;
-
-  const repaired = await askGroq("llama-3.3-70b-versatile", prompt);
-
-  if (!repaired || repaired === "incorrect") {
-    return text;
-  }
-
-  return repaired;
-
-}
-app.post("/generate-test", async (req, res) => {
-
-  const { pdfURL } = req.body;
-
-  if (!pdfURL)
-    return res.status(400).json({ error: "PDF URL required" });
-
-  try {
-
-    /* ================= READ PDF FROM CLOUDINARY ================= */
-
-    const responsePdf = await fetch(pdfURL);
-
-    if (!responsePdf.ok) {
-      console.error("Cloudinary fetch failed:", responsePdf.status);
-      return res.status(500).json({ error: "Failed to fetch PDF from Cloudinary" });
-    }
-
-    const pdfArrayBuffer = await responsePdf.arrayBuffer();
-    const pdfBuffer = Buffer.from(pdfArrayBuffer);
-
-    const pdfData = await pdfParse(pdfBuffer);
-
-    /* ================= CLEAN + SPLIT TEXT ================= */
-
-    const words = pdfData.text
-      .replace(/\s+/g, " ")
-      .split(" ");
-
-    if (words.length < 1000) {
-      return res.status(400).json({ error: "PDF text too small for quiz generation" });
-    }
-
-    /* ================= RANDOM CHUNK (AVOIDS TOKEN LIMITS) ================= */
-
-    const chunkSize = 1200;
-
-    const start = Math.floor(
-      Math.random() * Math.max(1, words.length - chunkSize)
-    );
-
-    let text = words.slice(start, start + chunkSize).join(" ");
-
-    /* Repair corrupted math expressions */
-
-    if (/[=√×÷^≤≥±]/.test(text)) {
-      text = await repairMathText(text);
-    }
-
-    /* ================= AI REQUEST ================= */
-
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            {
-              role: "user",
-              content: `
-You are an academic exam generator.
-
-The syllabus text below was extracted from a PDF and may contain
-missing or corrupted mathematical symbols.
-
-Your task:
-1. If mathematical expressions appear, reconstruct the intended symbols
-   such as ≥ ≤ ≠ ± × ÷ √ ^ ² ³ −.
-2. If no mathematical expressions are present, generate normal
-   conceptual or factual questions from the syllabus.
-3. priortize covering random portions of the entire syllabus. 
-   example: General knowledge, reasoning, science, english if available in the syllabus.
-
-Rules:
-- Generate EXACTLY 5 MCQs from the syllabus.
-- Questions can be conceptual, theoretical, numerical, or definition based.
-- Do NOT invent information outside the syllabus.
-- If math expressions appear, fix corrupted symbols before using them.
-- Each question must have exactly 4 options.
-- The correct answer MUST be exactly one of the options.
-
-Return STRICT JSON ONLY.
-
-{
- "questions":[
-  {
-   "question":"...",
-   "options":["...","...","...","..."],
-   "answer":"exact option text",
-   "explanation":"short explanation"
-  }
- ]
-}
-
-If the syllabus cannot generate questions, return:
-
-{"questions":[]}
-
-Syllabus:
-${text}
-`
-            }
-          ]
-        })
+        fs.unlink(req.file.path, () => {}); // Remove uploaded file
+        res.send("CSV uploaded successfully");
+      } catch (err) {
+        console.error('CSV upload error:', err);
+        res.status(500).send("Error processing CSV");
       }
-    );
-
-    const data = await response.json();
-
-    /* ================= VALIDATE AI RESPONSE ================= */
-
-    if (!data.choices || !data.choices[0]) {
-      console.error("AI RESPONSE ERROR:", data);
-      return res.status(500).json({ error: "AI response invalid" });
-    }
-
-    const raw = data.choices[0].message.content;
-
-    let parsed;
-
-    try {
-
-      let cleaned = raw
-        .replace(/```json/gi, "")
-        .replace(/```/g, "")
-        .trim();
-
-      const match = cleaned.match(/\{[\s\S]*\}/);
-
-      if (!match) {
-        throw new Error("No JSON detected");
-      }
-
-      parsed = JSON.parse(match[0]);
-
-    } catch (err) {
-
-      console.warn("AI JSON fixed automatically");
-
-      const match = raw.match(/\{[\s\S]*\}/);
-
-      if (match) {
-        parsed = JSON.parse(match[0]);
-      } else {
-        return res.status(500).json({
-          error: "AI returned invalid JSON"
-        });
-      }
-
-    }
-
-    /* ================= VERIFY QUESTIONS ================= */
-
-    const verifiedQuestions = [];
-
-    for (const q of parsed.questions) {
-
-      await new Promise(r => setTimeout(r, 1200));
-      /* FILTER BAD QUESTIONS */
-
-      if (!q.options.includes(q.answer)) {
-        console.warn("Rejected question because answer not in options:", q.question);
-        continue;
-      }
-
-      const verified = await verifyWithThreeModels(
-        q.question,
-        q.options,
-        q.answer
-      );
-
-      if (verified) {
-        verifiedQuestions.push(q);
-      }
-
-    }
-
-    /* if AI removed too many questions */
-
-    if (verifiedQuestions.length < 3) {
-      console.warn("Too many questions rejected by verification");
-    }
-
-    res.json({
-      questions: verifiedQuestions
     });
-
-  } catch (err) {
-
-    console.error("AI ERROR:", err);
-    res.status(500).json({ error: "AI failed" });
-
-  }
-
 });
-/* ================= AI COURSE SUMMARY ================= */
 
-app.post("/summarize-course", async (req, res) => {
-
-  const { pdfURL } = req.body;
-
-  if (!pdfURL)
-    return res.status(400).json({ error: "PDF required" });
-
+// Get all notifications
+app.get('/notifications', async (req, res) => {
   try {
+    const [rows] = await pool.execute('SELECT * FROM notifications ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error('Error loading notifications:', err);
+    res.status(500).send('Error loading notifications');
+  }
+});
 
-    const response = await fetch(pdfURL);
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    const pdfData = await pdfParse(buffer);
-
-    const text = pdfData.text.substring(0, 4000);
-
-    const ai = await askGroq(
-      "llama-3.1-8b-instant",
-      `
-Summarize this course in simple.
-rule: 
-1. skip cover pages.
-2. summarize what this course is about.(a little insight)
-3. do not explain the specific details. analyse the course carefully and summarise it.
-
-Text:
-${text}
-`
+// Add this function to send notification emails
+async function sendNotificationEmail(notification) {
+  try {
+    // Fetch all users who should receive notifications
+    const [users] = await pool.query(
+      'SELECT username FROM users WHERE notification_preferences = 1'
     );
 
-    res.json({ summary: ai });
+    // Send email to each user
+    for (const user of users) {
+      // In your sendNotificationEmail function
+const mailOptions = {
+  from: '"Little Flower School" <iamrein22@gmail.com>',
+  to: user.username,
+  subject: `New Notification: ${notification.title}`,
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      <div style="background: #2c3e50; color: white; padding: 20px; text-align: center;">
+        <h2 style="margin: 0;">Little Flower Higher Secondary School</h2>
+      </div>
+      
+      <div style="padding: 25px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">New Notification: ${escapeHtml(notification.title)}</h3>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">
+          <p style="margin: 0; line-height: 1.6; color: #34495e;">${escapeHtml(notification.description)}</p>
+        </div>
+        
+        ${
+          notification.document_data
+            ? `<div style="margin-top: 25px; text-align: center;">
+                <a href="${escapeHtml(`https://project-web-toio.onrender.com/notification-document/${notification.id}`)}" 
+                   style="display: inline-block; background: #3498db; color: white; 
+                          padding: 12px 24px; text-decoration: none; border-radius: 4px;
+                          font-weight: bold;">
+                  Download Document
+                </a>
+              </div>`
+            : ''
+        }
+      </div>
+      
+      <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+        <p style="color: #7f8c8d; margin: 0; font-size: 0.9em;">
+          You're receiving this email because you're registered at Little Flower Higher Secondary School.
+          <br>
+          <a href="${escapeHtml('https://lumthrong.github.io/project-web/unsubscribe.html')}" 
+             style="color: #3498db; text-decoration: none;">
+            Unsubscribe from notifications
+          </a>
+        </p>
+      </div>
+    </div>
+  `
+};
 
+      await transporter.sendMail(mailOptions);
+    }
   } catch (err) {
+    console.error('Error sending notification emails:', err);
+  }
+}
 
-    console.error(err);
-    res.status(500).json({ error: "AI summary failed" });
+// Update the add-notification endpoint
+app.post('/add-notification', docUpload.single('document'), async (req, res) => {
+  const { title, description } = req.body;
+  const file = req.file;
 
+  if (!title || !description) {
+    return res.status(400).send('Title and description are required');
   }
 
+  try {
+    let documentData = null;
+    let documentType = null;
+
+    if (file) {
+      documentData = fs.readFileSync(file.path);
+      documentType = file.mimetype;
+      fs.unlinkSync(file.path);
+    }
+
+    const [result] = await pool.query(
+      'INSERT INTO notifications (title, description, document_data, document_type) VALUES (?, ?, ?, ?)',
+      [title, description, documentData, documentType]
+    );
+    
+    const newNotification = {
+      id: result.insertId,
+      title,
+      description,
+      document_data: documentData,
+      created_at: new Date().toISOString()
+    };
+
+    // Send emails in the background (don't wait for completion)
+    sendNotificationEmail(newNotification).catch(err => 
+      console.error('Email sending failed:', err)
+    );
+
+    res.status(201).json(newNotification);
+  } catch (err) {
+    console.error('Error adding notification:', err);
+    res.status(500).send('Error adding notification');
+  }
 });
 
-const execAsync = promisify(exec);
-function downloadFile(url, dest) {
-  return new Promise((resolve, reject) => {
-
-    const file = fs.createWriteStream(dest);
-
-    https.get(url, (response) => {
-
-      if (response.statusCode !== 200) {
-        reject(new Error("Download failed: " + response.statusCode));
-        return;
-      }
-
-      response.pipe(file);
-
-      file.on("finish", () => {
-        file.close(resolve);
+// Enhanced unsubscribe endpoint
+app.post('/unsubscribe', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({ 
+        success: false, 
+        message: 'Invalid email format' 
       });
-
-    }).on("error", (err) => {
-      fs.unlink(dest, () => {});
-      reject(err);
-    });
-
-  });
-}
-app.post("/generate-transcript", async (req, res) => {
-
-  const { videoURL } = req.body;
-
-  if (!videoURL)
-    return res.status(400).json({ error: "Video required" });
-
-  try {
-
-const videoPath = "temp_video.mp4";
-const audioPath = "temp_audio.mp3";
-
-/* ===== DOWNLOAD VIDEO ===== */
-await downloadFile(videoURL, videoPath);
-
-/* ===== EXTRACT AUDIO ===== */
-await execAsync(`ffmpeg -i ${videoPath} -q:a 0 -map a ${audioPath}`);
-
-    /* ===== SPLIT INTO CHUNKS ===== */
-    await execAsync(
-      `ffmpeg -i ${audioPath} -f segment -segment_time 60 -c copy chunk_%03d.mp3`
+    }
+    
+    // Check if email exists in database
+    const [users] = await pool.query(
+      'SELECT id FROM users WHERE username = ?', // Only select id
+      [email]
     );
+    
+    if (users.length === 0) {
+      return res.json({ 
+        success: false, 
+        message: 'Email not registered. Try again with your registered email.' 
+      });
+    }
+    
+    // Update preferences
+    await pool.query(
+      'UPDATE users SET notification_preferences = 0 WHERE username = ?',
+      [email]
+    );
+    
+    // Send confirmation email
+    try {
+      const mailOptions = {
+        from: '"Little Flower School" <iamrein22@gmail.com>',
+        to: email,
+        subject: 'Notification Preferences Updated',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+            <div style="background: #7B1818; color: white; padding: 20px; text-align: center;">
+              <h2 style="margin: 0;">Little Flower Higher Secondary School</h2>
+            </div>
+            
+            <div style="padding: 25px;">
+              <h3 style="color: #7B1818; margin-top: 0;">Notification Preferences Updated</h3>
+              
+              <p>Hello,</p>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #7B1818;">
+                <p style="margin: 0; line-height: 1.6; color: #34495e;">
+                  You have successfully unsubscribed from all email notifications from Little Flower Higher Secondary School.
+                </p>
+                
+                <p style="margin: 15px 0 0; line-height: 1.6; color: #34495e;">
+                  You will no longer receive notification emails from us.
+                </p>
+              </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="color: #7f8c8d; margin: 0; font-size: 0.9em;">
+                If this was a mistake or you change your mind, you can
+                <a href="${escapeHtml('https://your-school-domain.com/subscribe')}" 
+                   style="color: #7B1818; text-decoration: none; font-weight: bold;">
+                  resubscribe here
+                </a>
+              </p>
+              <p style="color: #7f8c8d; margin: 10px 0 0; font-size: 0.8em;">
+                Little Flower Higher Secondary School<br>
+                123 School Road, City, State 12345<br>
+                Phone: (123) 456-7890
+              </p>
+            </div>
+          </div>
+        `
+      };
+      
+      await transporter.sendMail(mailOptions);
+    } catch (emailErr) {
+      console.error('Confirmation email failed:', emailErr);
+      // Don't fail the request, just log the error
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'You have successfully unsubscribed from email notifications. A confirmation email has been sent.' 
+    });
+  } catch (err) {
+    console.error('Unsubscribe error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error processing request' 
+    });
+  }
+});
 
-    /* ===== RUN WHISPER ===== */
-    let allSegments = [];
-    let offset = 0;
+// Add this endpoint to allow resubscribing
+app.post('/subscribe', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({ success: false, message: 'Invalid email format' });
+    }
+    
+    // Update preferences
+    await pool.query(
+      'UPDATE users SET notification_preferences = 1 WHERE username = ?',
+      [email]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'You have successfully resubscribed to email notifications' 
+    });
+  } catch (err) {
+    console.error('Subscribe error:', err);
+    res.status(500).json({ success: false, message: 'Error processing request' });
+  }
+});
 
-    const files = fs.readdirSync(".").filter(f => f.startsWith("chunk_"));
+// Get document endpoint
+app.get('/notification-document/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT document_data FROM notifications WHERE id = ?',
+      [req.params.id]
+    );
+    
+    if (!rows[0] || !rows[0].document_data) {
+      return res.status(404).send('Document not found');
+    }
+    
+    res.set('Content-Type', 'application/pdf');
+    res.send(rows[0].document_data);
+  } catch (err) {
+    console.error('Error fetching document:', err);
+    res.status(500).send('Error fetching document');
+  }
+});
 
-    for (const file of files) {
 
-      const { stdout } = await execAsync(`python transcribe.py ${file}`);
-
-      let segments = JSON.parse(stdout);
-
-      segments = segments.map(s => ({
-        ...s,
-        start: s.start + offset
-      }));
-
-      allSegments = allSegments.concat(segments);
-
-      offset += 60;
-
-      fs.unlinkSync(file);
+  
+// Update delete endpoint to use correct path
+app.delete('/delete-notification/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const [notification] = await pool.execute('SELECT document_path FROM notifications WHERE id = ?', [id]);
+    
+    if (notification[0] && notification[0].document_path) {
+      // Extract filename from stored path
+      const filename = notification[0].document_path.split('/').pop();
+      const filePath = path.join(__dirname, 'docs', 'uploads', 'notifications', filename);
+      
+      // Delete file
+      fs.unlink(filePath, (err) => {
+        if (err && err.code !== 'ENOENT') { // Ignore "not found" errors
+          console.error('Error deleting file:', err);
+        }
+      });
     }
 
-    /* ===== CLEANUP ===== */
-    fs.unlinkSync(audioPath);
-
-    res.json({ segments: allSegments });
-
+    await pool.execute('DELETE FROM notifications WHERE id = ?', [id]);
+    res.status(200).send('Notification deleted');
   } catch (err) {
-
-    console.error("TRANSCRIPT ERROR:", err);
-    res.status(500).json({ error: "Transcript failed" });
-
+    console.error('Error deleting notification:', err);
+    res.status(500).send('Error deleting notification');
   }
-
-});
-/* ================= FALLBACK ================= */
-
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
-/* ================= START SERVER ================= */
+// Result endpoints
+app.post('/check-result', async (req, res) => {
+  const { name, dob, roll_no } = req.body;
+  try {
+    const [students] = await pool.query(
+      "SELECT id FROM students WHERE name=? AND dob=? AND roll_no=?",
+      [name, dob, roll_no]
+    );
+    
+    if (students.length === 0) return res.json({ status: 'fail' });
+    
+    const studentId = students[0].id;
+    const [results] = await pool.query(
+      "SELECT subject, marks, grade FROM results WHERE student_id=?",
+      [studentId]
+    );
+    
+    res.json({ status: 'success', results });
+  } catch (err) {
+    console.error('Check result error:', err);
+    res.json({ status: 'fail' });
+  }
+});
 
-app.listen(5000, () => {
-  console.log("🚀 Server running at http://localhost:5000");
+app.post('/download-pdf', async (req, res) => {
+  const { name, dob, roll_no } = req.body;
+  try {
+    const [students] = await pool.query(
+      "SELECT id FROM students WHERE name=? AND dob=? AND roll_no=?", 
+      [name, dob, roll_no]
+    );
+    
+    if (students.length === 0) return res.status(404).send("Student not found");
+    
+    const studentId = students[0].id;
+    const [results] = await pool.query(
+      "SELECT subject, marks, grade FROM results WHERE student_id=?", 
+      [studentId]
+    );
+    
+    const doc = new PDFDocument();
+    res.setHeader('Content-disposition', `attachment; filename=${name}_${roll_no}_result.pdf`);
+    res.setHeader('Content-type', 'application/pdf');
+    doc.pipe(res);
+    
+    doc.fontSize(20).text("Result", { align: 'center' });
+    doc.fontSize(14).text(`Name: ${name}`);
+    doc.text(`Roll No: ${roll_no}`);
+    doc.text(`DOB: ${dob}`);
+    doc.moveDown();
+    
+    results.forEach(r => doc.text(`${r.subject}: ${r.marks} - ${r.grade}`));
+    doc.end();
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    res.status(500).send("Error generating PDF");
+  }
+});
+
+// ========== START SERVER ==========
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
